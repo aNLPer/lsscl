@@ -11,10 +11,11 @@ import torch.nn.functional as F
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 class Params():
-    def __init__(self, section)：
+    def __init__(self, section):
         self.section = section
         self.config = configparser.ConfigParser()
         self.config.read('train_config.cfg', encoding="utf-8")
+        
         # 读取超参数
         self.EPOCH = int(self.config.get(self.section, "EPOCH"))
         self.BATCH_SIZE = int(self.config.get(self.section, "BATCH_SIZE"))
@@ -26,6 +27,12 @@ class Params():
         self.PENALTY_LABEL_SIZE = int(self.config.get(self.section, "PENALTY_LABEL_SIZE"))
         self.LR = float(self.config.get(self.section, "LR"))
         self.L2 = float(self.config.get(self.section, "L2"))
+        self.WARMUP_STEP = int(self.config.get(self.section, "WARMUP_STEP")) 
+        self.STEP = int(self.config.get(self.section,"STEP"))
+        self.NUM_CYCLES = int(self.config.get(self.section,"NUM_CYCLES"))
+
+
+
         if section == "grubase":
             pass 
             
