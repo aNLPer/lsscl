@@ -232,23 +232,6 @@ class DataPreprocess():
                             if count%5000==0:
                                 print(f"已有{count}条数据被处理")
 
-        # 统计语料库
-        def getLang(self, lang_file_name="lang-CAIL.pkl"):
-            lang_f = open(lang_file_name, "wb")
-            lang = Lang()
-            for folder in self.folders:
-                for fn in self.file_names:
-                    print(f"processing {fn}")
-                    with open(os.path.join(self.data_base_path, folder, f"{fn}_processed_sp.txt"), "r",
-                              encoding="utf-8") as f:
-                        for line in f:
-                            sample = json.loads(line)
-                            lang.addSentence(sample[0])
-                            lang.addLabel(sample[1], sample[2])
-            lang.update_label2index()
-            pickle.dump(lang, lang_f)
-            lang_f.close()
-
     # statistic corpus
     def getLang(self):
         lang = Lang()
