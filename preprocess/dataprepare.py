@@ -23,7 +23,7 @@ class DataPreprocess():
         self.folders = folders  # 文件夹名称
         self.file_names = file_names  # 文件名称
 
-    # 过滤原始数据集
+    # filter cases 
     def data_filter(self):
         """
         根据文本长度、样本频率过滤数据集
@@ -120,7 +120,7 @@ class DataPreprocess():
                                     continue
             print('filter over......')
 
-    # 过滤特殊字符等
+    # process special charac
     def data_process(self):
         '''
         构造数据集：[case_desc, "acc", "article","penalty"]
@@ -135,16 +135,16 @@ class DataPreprocess():
         :return: [[[case_desc,case_desc,...], "acc", "acc_desc"],]
         '''
         # 加载分词器
-        thu = thulac.thulac(user_dict="Thuocl_seg.txt", seg_only=True)
+        thu = thulac.thulac(user_dict="preprocess/Thuocl_seg.txt", seg_only=True)
         # 加载停用词表
         stopwords = []
-        for n in os.listdir("./stopwords"):
-            stopwords.extend(utils.get_filter_symbols(os.path.join("./stopwords", n)))
+        for n in os.listdir("preprocess/stopwords"):
+            stopwords.extend(utils.get_filter_symbols(os.path.join("preprocess/stopwords", n)))
         stopwords = list(set(stopwords))
         # 加载标点
-        punctuations = utils.get_filter_symbols("punctuation.txt")
+        punctuations = utils.get_filter_symbols("preprocess/punctuation.txt")
         # 加载特殊符号
-        special_symbols = utils.get_filter_symbols("special_symbol.txt")
+        special_symbols = utils.get_filter_symbols("preprocess/special_symbol.txt")
 
         for folder in self.folders:
             for fn in self.file_names:
@@ -173,9 +173,9 @@ class DataPreprocess():
                                             char not in ["\n", "\r"]]
                             example_fact = "".join(example_fact)
 
-                            # 删除过短文本
-                            if len(example_fact) < 15:
-                                continue
+                            # # 删除过短文本
+                            # if len(example_fact) < 15:
+                            #     continue
 
                             # 分词
                             example_fact_seg = [word.strip() for word in thu.cut(example_fact, text=True).split(" ")]
@@ -232,60 +232,6 @@ class DataPreprocess():
                             if count%5000==0:
                                 print(f"已有{count}条数据被处理")
 
-    # 划分数据集
-    def data_split(self, mode="split"):
-        accu2case = {}
-        print("load dataset......")
-        count_total = 0
-        for folder in self.folders:
-            for fn in self.file_names:
-                with open(os.path.join(self.dataset_base_path, folder, f"{fn}_processed.txt"), "r", encoding="utf-8") as f:
-                    for line in f:
-                        sample = json.loads(line)
-                        # if len(sample[0]) > 600:
-                        #     count_long += 1
-                        #     continue
-                        desc = sample[0]
-                        accu = sample[1]
-                        article = sample[2]
-                        penalty = sample[3]
-                        count_total += 1
-                        if accu not in accu2case:
-                            if mode == "analyse":
-                                accu2case[accu] = 1
-                            if mode == "split":
-                                accu2case[accu] = [[desc, accu, article, penalty]]
-                        else:
-                            if mode == "analyse":
-                                accu2case[accu] += 1
-                            if mode == "split":
-                                accu2case[accu].append([desc, accu, article, penalty])
-            print("total sample ：",count_total)
-            keys = []
-            for key, values in accu2case.items():
-                if len(values) < 135:
-                    keys.append(key)
-            print("removed accus:",keys)
-            for key in keys:
-                accu2case.pop(key)
-
-            train_file = open(os.path.join(self.dataset_base_path, folder, "train_processed_sp.txt"), "w", encoding="utf-8")
-            test_file = open(os.path.join(self.dataset_base_path, folder, "test_processed_sp.txt"),"w", encoding="utf-8")
-            for accu, cases in accu2case.items():
-                np.random.shuffle(cases)
-                case_num = len(cases)
-                t_n = int(0.89*case_num)
-                train_cases = cases[:t_n]
-                test_cases = cases[t_n:]
-                for case in train_cases:
-                    case_str = json.dumps(case, ensure_ascii=False)
-                    train_file.write(case_str+"\n")
-                for case in test_cases:
-                    case_str = json.dumps(case, ensure_ascii=False)
-                    test_file.write(case_str+"\n")
-            train_file.close()
-            test_file.close()
-
         # 统计语料库
         def getLang(self, lang_file_name="lang-CAIL.pkl"):
             lang_f = open(lang_file_name, "wb")
@@ -303,7 +249,7 @@ class DataPreprocess():
             pickle.dump(lang, lang_f)
             lang_f.close()
 
-    # 统计语料库
+    # statistic corpus
     def getLang(self):
         lang = Lang()
         for folder in self.folders:
@@ -320,9 +266,9 @@ class DataPreprocess():
         print("end...")
 
 
-
 if __name__=="__main__":
-    dp = DataPreprocess(dataset_base_path="dataset", folders=["CAIL-SMALL", "CAIL-LARGE"], file_names=["train", "test"])
+    dp = DataPreprocess(dataset_base_path="dataset", folders=["CAIL-SMALL", "CAIL-LARGE"], file_names=["test", "train"])
+    dp.data_process()
     dp.getLang()
 
 

@@ -30,8 +30,8 @@ def train():
         
         print(f"load {dataset_path[i]} train data...")
         train_seq, train_charge_labels, train_article_labels, train_penalty_labels = \
-            utils.prepare_data(os.path.join(dataset_path[i], "train_processed.txt"), lang, input_idx=0, max_length=param.MAX_LENGTH,
-                         pretrained_vec=pretrained_model)
+            utils.prepare_data(os.path.join(dataset_path[i], "train_processed.txt"), lang, input_idx=0, max_length=param.MAX_LENGTH, 
+            pretrained_vec=pretrained_model)
         
         print(f"load {dataset_path[i]} test data...")
         train_seq, train_charge_labels, train_article_labels, train_penalty_labels = \
