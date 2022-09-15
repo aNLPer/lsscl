@@ -1,4 +1,9 @@
 # coding:utf-8
+import sys,os
+# sys.path.append('需要作为模块引入的路径')
+# 添加当前路径的前一级文件作为源文件夹
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+
 import configparser
 import os
 import numpy as np
@@ -169,7 +174,7 @@ class DataPreprocess():
                             example_fact = "".join(example_fact)
 
                             # 删除过短文本
-                            if len(example_fact) < 10:
+                            if len(example_fact) < 15:
                                 continue
 
                             # 分词
@@ -302,20 +307,22 @@ class DataPreprocess():
     def getLang(self):
         lang = Lang()
         for folder in self.folders:
-            with open(f"{folder}-Lang.pkl", "wb") as lang_f:
+            with open(f"preprocess/{folder}-Lang.pkl", "wb") as lang_f:
                 for fn in self.file_names:
                     print(f"processing {folder}/{fn}")
-                    with open(os.path.join(self.dataset_base_path, folder, f"{fn}_processed_sp.txt"), "r", encoding="utf-8") as f:
+                    with open(os.path.join(self.dataset_base_path, folder, f"{fn}_processed.txt"), "r", encoding="utf-8") as f:
                         for line in f:
                             sample = json.loads(line)
                             lang.addSentence(sample[0])
-                            lang.addLabel(sample[1], sample[2])
+                            lang.addLabel(sample[2], sample[3])
                 lang.update_label2index()
                 pickle.dump(lang, lang_f)
         print("end...")
 
+
+
 if __name__=="__main__":
-    dp = DataPreprocess(dataset_base_path="../dataset", folders=["CAIL-SMALL"], file_names=["train"])
+    dp = DataPreprocess(dataset_base_path="dataset", folders=["CAIL-SMALL", "CAIL-LARGE"], file_names=["train", "test"])
     dp.getLang()
 
 
