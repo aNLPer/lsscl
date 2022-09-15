@@ -10,6 +10,26 @@ import torch.nn.functional as F
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
+class Params():
+    def __init__(self, section)：
+        self.section = section
+        self.config = configparser.ConfigParser()
+        self.config.read('train_config.cfg', encoding="utf-8")
+        # 读取超参数
+        self.EPOCH = int(self.config.get(self.section, "EPOCH"))
+        self.BATCH_SIZE = int(self.config.get(self.section, "BATCH_SIZE"))
+        self.EM_SIZE = int(self.config.get(self.section, "EM_SIZE")) # token emb size
+        self.GRU_HIDDEN_SIZE = int(self.config.get(self.section, "GRU_HIDDEN_SIZE")) # encoder 隐藏层维度
+        self.MAX_LENGTH = int(self.config.get(self.section, "MAX_LENGTH")) # seq max length
+        self.GRU_LAYERS = int(self.config.get(self.section, 'GRU_LAYERS'))  
+        self.DROPOUT_RATE = float(self.config.get(self.section, "DROPOUT_RATE"))
+        self.PENALTY_LABEL_SIZE = int(self.config.get(self.section, "PENALTY_LABEL_SIZE"))
+        self.LR = float(self.config.get(self.section, "LR"))
+        self.L2 = float(self.config.get(self.section, "L2"))
+        if section == "grubase":
+            pass 
+            
+        
 
 class Lang:
     # 语料库对象
@@ -629,6 +649,8 @@ def preds2labels(preds):
     preds = np.argmax(preds, axis=1).flatten()
     return list(preds)
 
+def load_params():
+    pass
 
 if __name__ == "__main__":
     preds = np.array([[0.2,0.8],[0.1,0.9]])
