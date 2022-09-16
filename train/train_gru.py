@@ -14,7 +14,7 @@ from transformers import get_linear_schedule_with_warmup, get_cosine_with_hard_r
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 corpus_info_path = ["preprocess/CAIL-SMALL-Lang.pkl", "preaprocess/Lang-CAIL-LARGE.pkl"]
 dataset_path = ["dataset/CAIL-SMALL", "dataset/CAIL-LARGE"]
-pretrain_lm = f'dataset/pretrain/law_token_vec_300.bin'
+pretrain_lm = "dataset/pretrain/law_token_vec_300.bin"
 
 print("load model params...")
 param = utils.Params("gru-base")
@@ -30,7 +30,7 @@ def train():
         
         print(f"load {dataset_path[i]} train data...")
         train_seq, train_charge_labels, train_article_labels, train_penalty_labels = \
-            utils.prepare_data(os.path.join(dataset_path[i], "train_processed.txt"), lang, input_idx=0, max_length=param.MAX_LENGTH, 
+            utils.prepare_data(os.path.join(dataset_path[i], "train_processed.txt"), lang,max_length=param.MAX_LENGTH, 
             pretrained_vec=pretrained_model)
         
         print(f"load {dataset_path[i]} test data...")

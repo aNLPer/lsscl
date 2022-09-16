@@ -453,7 +453,7 @@ def genConfusMat(confusMat, preds, labels):
     for i in range(len(labels_flat)):
         confusMat[labels_flat[i]][pred_flat[i]] += 1
 
-def prepare_data(resourcefile, lang, input_idx, max_length, pretrained_vec=None):
+def prepare_data(resourcefile, lang, max_length, pretrained_vec=None):
     seq = []
     charge_labels = []
     article_labels = []
@@ -464,9 +464,9 @@ def prepare_data(resourcefile, lang, input_idx, max_length, pretrained_vec=None)
 
             if pretrained_vec is not None:
                 case = [pretrained_vec.get_index(w) if w in pretrained_vec.key_to_index.keys()
-                        else pretrained_vec.get_index("") for w in item[input_idx]]
+                        else pretrained_vec.get_index("") for w in item[0]]
             else:
-                case = [lang.word2index[w] for w in item[input_idx]]
+                case = [lang.word2index[w] for w in item[0]]
 
             if len(case)<=max_length:
                 case_clip = case
