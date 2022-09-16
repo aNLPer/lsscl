@@ -50,11 +50,11 @@ def freq_in_cate(docs, token):
     for d in docs:
         freq += d.count(token)
         total_token += len(d)
-    return freq/(total_token+0.001)
+    return freq/(total_token+0.0001)
 
 def idf(dic,token):
     cate_num = len(dic.keys())
-    total_dist = 0.
+    total_dist = 0.0001
     for key,values in dic.items():
         total_dist += dist_in_cate(values, token)
     return math.log(cate_num/total_dist,10)
@@ -65,7 +65,7 @@ def tf_idf(dic, lang):
     for key, values in dic.items():
         # 初始化向量表示
         tf_idf_rep = [0]*(lang.n_words-1)
-        for i in range(lang.n_words-1):
+        for i in range(1,lang.n_words):
             token = lang.index2word[i]
             # 计算tf_idf值
             item_1 = dist_in_cate(values, token)
@@ -109,19 +109,22 @@ def test_contrust_graph():
 
 
 if __name__=="__main__":
-    data_paths = ["dataset/CAIL-SMALL"]
-    lang_paths = ["a"]
-    label_reps = []
+    data_paths = ["dataset/CAIL-SMALL/train_seg.txt","dataset/CAIL-LARGE/train_seg.txt"]
+    lang_paths = ["dataset/CAIL-SMALL/train_seg_lang.pkl", "dataset/CAIL-LARGE/train_seg_lang.pkl"]
     threshold = 0.5
+    label_reps = []
     for i in range(len(data_paths)):
         print("加载语料库信息...")
         with open(lang_paths[i], "rb") as f:
-            lang = pickle.loads(f)
+            lang = pickle.load(f)
         print("获取label-case字典...")
-        dicts = idx2cases(data_paths[i], lang)
+        dicts = idx2cases(data_paths[i])
         print("为每个lebel计算tf-idf表示向量")
         for d in dicts:
-            label_reps.append(tf_idf(d, lang))
+            rep = tf_idf(d, lang)
+            label_reps.append(rep)
+        print("为label构造相似图")
+        
         
 
 
