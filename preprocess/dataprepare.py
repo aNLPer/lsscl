@@ -244,6 +244,7 @@ class DataPreprocess():
                         if item[1] not in acc and item[2] not in art:
                             fw.write(line)
         fw.close()
+        print("end...")
     
     # 数据统计并过滤掉训练数据少于阈值的case
     def dataset_statistic(self):
@@ -296,26 +297,50 @@ class DataPreprocess():
         
         return train_accu2casenum, train_article2casenum, test_accu2casenum, test_article2casenum
 
+    def segment(self):
+        print("加载分词器...")
+        thu = thulac.thulac(user_dict="preprocess/Thuocl_seg.txt", seg_only=True)
+        print("加载停用词表...")
+        stopwords = []
+        for n in os.listdir("preprocess/stopwords"):
+            stopwords.extend(utils.get_filter_symbols(os.path.join("preprocess/stopwords", n)))
+        stopwords = list(set(stopwords))
+        
+        print("segment...")
+        for folder in self.folders:
+            for fname in self.file_names:
+                print(folder,f"/{fname}")
+                fw = open(os.path.join(self.dataset_base_path, folder, f"{fname}_seg.txt"), "w", encoding="utf-8")
+                with open(os.path.join(self.dataset_base_path, folder, f"{fname}.txt"), "r", encoding="utf-8") as f:
+                    for line in f:
+                        item = json.loads(line)
+                        # 分词并去掉停用词
+                        example_fact_seg = [word.strip() for word in thu.cut(item[0], text=True).split(" ")]
+                        example_fact_seg = [word for word in example_fact_seg if word not in stopwords]
+                        item[0] = example_fact_seg
+                        fw.write(json.dumps(item, ensure_ascii=False)+"\n")
+        fw.close()
+        print("end...")
+    
     # statistic corpus
-    def getLang(self):
+    def getLang(self, lang_name, file_name):
         lang = Lang()
         for folder in self.folders:
-            with open(f"preprocess/{folder}-Lang.pkl", "wb") as lang_f:
-                for fn in self.file_names:
-                    print(f"processing {folder}/{fn}")
-                    with open(os.path.join(self.dataset_base_path, folder, f"{fn}_processed.txt"), "r", encoding="utf-8") as f:
-                        for line in f:
-                            sample = json.loads(line)
-                            lang.addSentence(sample[0])
-                            lang.addLabel(sample[2], sample[3])
+            with open(f"preprocess/{lang_name}-Lang.pkl", "wb") as lang_f:
+                print(f"processing {folder}/train")
+                with open(os.path.join(self.dataset_base_path, folder, f"{file_name}.txt"), "r", encoding="utf-8") as f:
+                    for line in f:
+                        sample = json.loads(line)
+                        lang.addSentence(sample[0])
+                        lang.addLabel(sample[1], sample[2])
                 lang.update_label2index()
                 pickle.dump(lang, lang_f)
         print("end...")
 
 
 if __name__=="__main__":
-    dp = DataPreprocess(dataset_base_path="dataset", folders=["CAIL-LARGE"], file_names=["test", "train"])
-    dp.dataset_statistic()
+    dp = DataPreprocess(dataset_base_path="dataset", folders=["CAIL-SMALL"], file_names=["test", "train"])
+    dp.segment()
     # dp.data_filter(acc=[], art=[356])
     # dp.case_filter()
     # dp.getLang()
