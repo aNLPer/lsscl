@@ -231,6 +231,22 @@ class DataPreprocess():
                             fw.write(list_str+"\n")
                             if count%5000==0:
                                 print(f"已有{count}条数据被处理")
+    # 数据统计
+    def dataset_statistic(self):
+        accu2casenum = {}
+        article2casenum = {}
+        with open(self.dataset_base_path, "CAIL-SMALL", "train_processed.txt") as f:
+            for line in f:
+                item = json.loads(line)
+                if item[1] not in accu2casenum:
+                    accu2casenum[item[1]] = 1
+                else:
+                    accu2casenum[item[1]] += 1
+                if item[2] not in accu2casenum:
+                    article2casenum[item[2]] = 1
+                else:
+                    article2casenum[item[2]] += 1
+        return accu2casenum, article2casenum
 
     # statistic corpus
     def getLang(self):
@@ -251,8 +267,9 @@ class DataPreprocess():
 
 if __name__=="__main__":
     dp = DataPreprocess(dataset_base_path="dataset", folders=["CAIL-SMALL", "CAIL-LARGE"], file_names=["test", "train"])
-    dp.data_process()
-    dp.getLang()
+    dp.dataset_statistic()
+    # dp.data_process()
+    # dp.getLang()
 
 
 
