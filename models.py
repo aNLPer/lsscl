@@ -86,4 +86,6 @@ class GRUBase(nn.Module):
 
         return charge_preds, article_preds, penalty_preds
 
-print(int(234))        
+d = {"a":[1,2,3,4], "b":[1,2,3,4]}
+for v in d.values():
+    print(v)     
