@@ -232,12 +232,11 @@ class DataPreprocess():
                             if count%5000==0:
                                 print(f"已有{count}条数据被处理")
     
-# 过滤掉训练数据少于100的case
-    def data_filter(self):
-        acc = ['容留他人吸毒', '动植物检疫徇私舞弊','单位受贿', '对单位行贿', '妨害作证']
-        art = [387, 391, 307, 354]
+    # 过滤掉训练数据少于阈值的case
+    def data_filter(self, acc, art):
         for folder in self.folders:
             for fname in self.file_names:
+                print(folder,f"/{fname}")
                 fw = open(os.path.join(self.dataset_base_path, folder, f"{fname}.txt"), "w", encoding="utf-8")
                 with open(os.path.join(self.dataset_base_path, folder, f"{fname}_processed.txt"), "r", encoding="utf-8") as f:
                     for line in f:
@@ -246,13 +245,13 @@ class DataPreprocess():
                             fw.write(line)
         fw.close()
     
-    # 数据统计
+    # 数据统计并过滤掉训练数据少于阈值的case
     def dataset_statistic(self):
         train_accu2casenum = {}
         train_article2casenum = {}
         test_accu2casenum = {}
         test_article2casenum = {}
-        with open(os.path.join(self.dataset_base_path, "CAIL-SMALL", "train.txt"), "r", encoding="utf-8") as f:
+        with open(os.path.join(self.dataset_base_path, "CAIL-LARGE", "train.txt"), "r", encoding="utf-8") as f:
             for line in f:
                 item = json.loads(line)
                 if item[1] not in train_accu2casenum:
@@ -263,7 +262,7 @@ class DataPreprocess():
                     train_article2casenum[item[2]] = 1
                 else:
                     train_article2casenum[item[2]] += 1
-        with open(os.path.join(self.dataset_base_path, "CAIL-SMALL", "test.txt"), "r", encoding="utf-8") as f:
+        with open(os.path.join(self.dataset_base_path, "CAIL-LARGE", "test.txt"), "r", encoding="utf-8") as f:
             for line in f:
                 item = json.loads(line)
                 if item[1] not in test_accu2casenum:
@@ -274,6 +273,13 @@ class DataPreprocess():
                     test_article2casenum[item[2]] = 1
                 else:
                     test_article2casenum[item[2]] += 1
+        
+        for key, value in train_accu2casenum.items():
+            print(key, value, test_accu2casenum[key])
+
+        for key, value in train_article2casenum.items():
+            print(key, value, test_article2casenum[key])
+
         # 测试集和训练集标签差集
         test_acc = set(list(test_accu2casenum.keys()))
         train_acc = set(list(train_accu2casenum.keys()))
@@ -282,6 +288,7 @@ class DataPreprocess():
         print(train_acc-test_acc)
         print(train_art-test_art)
 
+        # 排序
         tr_accu2casenum = sorted(list(train_accu2casenum.items()), key=lambda x: x[1])            
         te_accu2casenum = sorted(list(test_accu2casenum.items()), key=lambda x: x[1])            
         tr_article2casenum = sorted(list(train_article2casenum.items()), key=lambda x: x[1])            
@@ -307,9 +314,10 @@ class DataPreprocess():
 
 
 if __name__=="__main__":
-    dp = DataPreprocess(dataset_base_path="dataset", folders=["CAIL-SMALL"], file_names=["test", "train"])
-    # dp.data_filter()
+    dp = DataPreprocess(dataset_base_path="dataset", folders=["CAIL-LARGE"], file_names=["test", "train"])
     dp.dataset_statistic()
+    # dp.data_filter(acc=[], art=[356])
+    # dp.case_filter()
     # dp.getLang()
 
 

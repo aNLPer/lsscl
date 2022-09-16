@@ -85,3 +85,5 @@ class GRUBase(nn.Module):
         penalty_preds = self.penaltyPreds(outputs_mean)
 
         return charge_preds, article_preds, penalty_preds
+
+print(int(234))        
