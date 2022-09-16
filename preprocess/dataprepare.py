@@ -339,7 +339,7 @@ class DataPreprocess():
 
 
 if __name__=="__main__":
-    dp = DataPreprocess(dataset_base_path="dataset", folders=["CAIL-SMALL"], file_names=["test", "train"])
+    dp = DataPreprocess(dataset_base_path="dataset", folders=["CAIL-SMALL","CAIL-LARGE"], file_names=["test", "train"])
     dp.segment()
     # dp.data_filter(acc=[], art=[356])
     # dp.case_filter()
