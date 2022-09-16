@@ -53,9 +53,9 @@ def freq_in_cate(docs, token):
     return freq/(total_token+0.001)
 
 def idf(dic,token):
-    cate_num = len(dict.keys())
+    cate_num = len(dic.keys())
     total_dist = 0.
-    for key,values in dict.items():
+    for key,values in dic.items():
         total_dist += dist_in_cate(values, token)
     return math.log(cate_num/total_dist,10)
 
@@ -76,7 +76,18 @@ def tf_idf(dic, lang):
     return idx2tf_idf
 
 def contrust_graph(dic,threshold):
-    pass
+    # 相似矩阵
+    sim_matrix = np.zeros(shape=(len(dic.keys()), len(dic.keys())))
+    arr = np.array([v for v in dic.values()])
+    for i in range(arr.shape[0]):
+        for j in range(arr.shape[0]):
+            cos_sim = arr[i].dot(arr[j]) / np.linalg.norm(arr[i]) * np.linalg.norm(arr[j])
+            if cos_sim>threshold:
+                sim_matrix[i][j] = cos_sim
+            else:
+                sim_matrix[i][j] = 0.
+    return sim_matrix
+    
 
 
 data_paths = ["dataset/CAIL-SMALL"]
