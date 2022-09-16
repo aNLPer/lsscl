@@ -323,7 +323,7 @@ class DataPreprocess():
         print("end...")
     
     # statistic corpus
-    def getLang(self, lang_name):
+    def getLang(self):
         file_name = ["train", "train_seg"]
         for folder in self.folders:
             for fn in file_name:
