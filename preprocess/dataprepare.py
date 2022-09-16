@@ -323,27 +323,29 @@ class DataPreprocess():
         print("end...")
     
     # statistic corpus
-    def getLang(self, lang_name, file_name):
-        lang = Lang()
+    def getLang(self, lang_name):
+        file_name = ["train", "train_seg"]
         for folder in self.folders:
-            with open(f"preprocess/{lang_name}-Lang.pkl", "wb") as lang_f:
-                print(f"processing {folder}/train")
-                with open(os.path.join(self.dataset_base_path, folder, f"{file_name}.txt"), "r", encoding="utf-8") as f:
-                    for line in f:
-                        sample = json.loads(line)
-                        lang.addSentence(sample[0])
-                        lang.addLabel(sample[1], sample[2])
-                lang.update_label2index()
-                pickle.dump(lang, lang_f)
+            for fn in file_name:
+                lang = Lang()
+                with open(f"dataset/{folder}/{fn}-Lang.pkl", "wb") as lang_f:
+                    print(f"processing {folder}/{fn}")
+                    with open(os.path.join(self.dataset_base_path, folder, f"{fn}.txt"), "r", encoding="utf-8") as f:
+                        for line in f:
+                            sample = json.loads(line)
+                            lang.addSentence(sample[0])
+                            lang.addLabel(sample[1], sample[2])
+                    lang.update_label2index()
+                    pickle.dump(lang, lang_f)
         print("end...")
 
 
 if __name__=="__main__":
     dp = DataPreprocess(dataset_base_path="dataset", folders=["CAIL-SMALL","CAIL-LARGE"], file_names=["test", "train"])
-    dp.segment()
+    # dp.segment()
     # dp.data_filter(acc=[], art=[356])
     # dp.case_filter()
-    # dp.getLang()
+    dp.getLang()
 
 
 
