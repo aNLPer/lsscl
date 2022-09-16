@@ -1,6 +1,7 @@
 # encoding=utf-8
 # 首先获取每个指控或者法律条款对应的case descs
 # 计算每个指控或者法律条款对应的tf-idf向量
+from distutils.log import set_threshold
 import json
 import thulac
 import utils
@@ -8,7 +9,7 @@ import jieba
 import os
 import pickle
 import math
-import torch
+import numpy as np
 
 def idx2cases(path):
     accu2cases = {}
@@ -33,7 +34,7 @@ def idx2cases(path):
             else:
                 penalty2cases[penalty].append(item[0])
 
-    return accu2cases, art2cases, penalty2cases
+    return (accu2cases, art2cases, penalty2cases)
 
 def dist_in_cate(docs, token):
     # token 在类别c的文档中的分布
@@ -72,16 +73,28 @@ def tf_idf(dic, lang):
             item_3 = idf(dic,token)
             tf_idf_rep[i] = item_1*item_2*item_3
         idx2tf_idf[key] = tf_idf_rep
+    return idx2tf_idf
+
+def contrust_graph(dic,threshold):
+    pass
+
 
 data_paths = ["dataset/CAIL-SMALL"]
+lang_paths = ["a"]
+label_reps = []
+threshold = 0.5
+for i in range(len(data_paths)):
+    print("加载语料库信息...")
+    with open(lang_paths[i], "rb") as f:
+        lang = pickle.loads(f)
+    print("获取label-case字典...")
+    dicts = idx2cases(data_paths[i], lang)
+    print("为每个lebel计算tf-idf表示向量")
+    for d in dicts:
+        label_reps.append(tf_idf(d, lang))
+    
 
 
 
-print("加载语料库信息...")
-with open() as f:
-    pickle.loads(f)
-paths = ["dataset/CAIL-SMALL"]
-for path in paths:
-    acc2cases, art2cases, penalty2cases = idx2cases(path)
 
 
