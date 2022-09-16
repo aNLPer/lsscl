@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn 
 import numpy as np
+import graph_construction
 from torch.nn.utils.rnn import pad_sequence, pack_padded_sequence, pad_packed_sequence
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -86,6 +87,4 @@ class GRUBase(nn.Module):
 
         return charge_preds, article_preds, penalty_preds
 
-d = {"a":[1,2,3,4], "b":[1,2,3,4]}
-for v in d.values():
-    print(v)     
+

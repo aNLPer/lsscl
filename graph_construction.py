@@ -77,33 +77,52 @@ def tf_idf(dic, lang):
 
 def contrust_graph(dic,threshold):
     # 相似矩阵
-    sim_matrix = np.zeros(shape=(len(dic.keys()), len(dic.keys())))
+    keys = list(dic.keys())
+    sim_matrix = np.zeros(shape=(len(keys), len(keys)))
     arr = np.array([v for v in dic.values()])
     for i in range(arr.shape[0]):
         for j in range(arr.shape[0]):
-            cos_sim = arr[i].dot(arr[j]) / np.linalg.norm(arr[i]) * np.linalg.norm(arr[j])
+            cos_sim = arr[i].dot(arr[j])/(np.linalg.norm(arr[i])*np.linalg.norm(arr[j]))
             if cos_sim>threshold:
                 sim_matrix[i][j] = cos_sim
             else:
                 sim_matrix[i][j] = 0.
-    return sim_matrix
     
+    # 根据相似矩阵得到label_sim_graph
+    sim_graph = {}
+    for k in keys:
+        sim_graph.setdefault(k,{})
+    for i in range(len(keys)):
+        for j in range(len(keys)):
+            if i == j:
+                continue
+            if sim_matrix[i][j]!=0:
+                sim_graph[keys[i]][keys[j]]=sim_matrix[i][j]
+    return sim_graph
+
+def test_contrust_graph():
+    d = {"a":[1,2,3,4], "b":[1,2,3,4], "c":[-1,-2,-3,4], "d":[-1,-2,-3,4], "e":[1,2,3,4]}
+    print(list(d.keys()))
+    m, g = graph_construction.contrust_graph(d, 0.5)
+    print(m, g)
 
 
-data_paths = ["dataset/CAIL-SMALL"]
-lang_paths = ["a"]
-label_reps = []
-threshold = 0.5
-for i in range(len(data_paths)):
-    print("加载语料库信息...")
-    with open(lang_paths[i], "rb") as f:
-        lang = pickle.loads(f)
-    print("获取label-case字典...")
-    dicts = idx2cases(data_paths[i], lang)
-    print("为每个lebel计算tf-idf表示向量")
-    for d in dicts:
-        label_reps.append(tf_idf(d, lang))
-    
+
+if __name__=="__main__":
+    data_paths = ["dataset/CAIL-SMALL"]
+    lang_paths = ["a"]
+    label_reps = []
+    threshold = 0.5
+    for i in range(len(data_paths)):
+        print("加载语料库信息...")
+        with open(lang_paths[i], "rb") as f:
+            lang = pickle.loads(f)
+        print("获取label-case字典...")
+        dicts = idx2cases(data_paths[i], lang)
+        print("为每个lebel计算tf-idf表示向量")
+        for d in dicts:
+            label_reps.append(tf_idf(d, lang))
+        
 
 
 
