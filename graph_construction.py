@@ -118,7 +118,9 @@ if __name__=="__main__":
         for d in dicts:
             rep = tf_idf(d, lang)
             label_reps.append(rep)
-        print(f"{round((time.time()-start)/60, 6)}min")
+        print(f"{round((time.time()-start)/60, 6)} min")
+        with open("label_reps.pkl", "wb") as f:
+            pickle.dump(label_reps, f)
         print("为label构造相似图...")
         
         

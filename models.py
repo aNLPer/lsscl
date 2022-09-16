@@ -1,4 +1,5 @@
 import torch
+import pickle
 import torch.nn as nn 
 import numpy as np
 import graph_construction
@@ -86,5 +87,4 @@ class GRUBase(nn.Module):
         penalty_preds = self.penaltyPreds(outputs_mean)
 
         return charge_preds, article_preds, penalty_preds
-
 
