@@ -24,7 +24,7 @@ class DataPreprocess():
         self.file_names = file_names  # 文件名称
 
     # filter cases 
-    def data_filter(self):
+    def case_filter(self):
         """
         根据文本长度、样本频率过滤数据集
         :param source_path:
@@ -121,7 +121,7 @@ class DataPreprocess():
             print('filter over......')
 
     # process special charac
-    def data_process(self):
+    def charc_process(self):
         '''
         构造数据集：[case_desc, "acc", "article","penalty"]
         # 分词
@@ -231,22 +231,63 @@ class DataPreprocess():
                             fw.write(list_str+"\n")
                             if count%5000==0:
                                 print(f"已有{count}条数据被处理")
+    
+# 过滤掉训练数据少于100的case
+    def data_filter(self):
+        acc = ['容留他人吸毒', '动植物检疫徇私舞弊','单位受贿', '对单位行贿', '妨害作证']
+        art = [387, 391, 307, 354]
+        for folder in self.folders:
+            for fname in self.file_names:
+                fw = open(os.path.join(self.dataset_base_path, folder, f"{fname}.txt"), "w", encoding="utf-8")
+                with open(os.path.join(self.dataset_base_path, folder, f"{fname}_processed.txt"), "r", encoding="utf-8") as f:
+                    for line in f:
+                        item = json.loads(line)
+                        if item[1] not in acc and item[2] not in art:
+                            fw.write(line)
+        fw.close()
+    
     # 数据统计
     def dataset_statistic(self):
-        accu2casenum = {}
-        article2casenum = {}
-        with open(self.dataset_base_path, "CAIL-SMALL", "train_processed.txt") as f:
+        train_accu2casenum = {}
+        train_article2casenum = {}
+        test_accu2casenum = {}
+        test_article2casenum = {}
+        with open(os.path.join(self.dataset_base_path, "CAIL-SMALL", "train.txt"), "r", encoding="utf-8") as f:
             for line in f:
                 item = json.loads(line)
-                if item[1] not in accu2casenum:
-                    accu2casenum[item[1]] = 1
+                if item[1] not in train_accu2casenum:
+                    train_accu2casenum[item[1]] = 1
                 else:
-                    accu2casenum[item[1]] += 1
-                if item[2] not in accu2casenum:
-                    article2casenum[item[2]] = 1
+                    train_accu2casenum[item[1]] += 1
+                if item[2] not in train_article2casenum:
+                    train_article2casenum[item[2]] = 1
                 else:
-                    article2casenum[item[2]] += 1
-        return accu2casenum, article2casenum
+                    train_article2casenum[item[2]] += 1
+        with open(os.path.join(self.dataset_base_path, "CAIL-SMALL", "test.txt"), "r", encoding="utf-8") as f:
+            for line in f:
+                item = json.loads(line)
+                if item[1] not in test_accu2casenum:
+                    test_accu2casenum[item[1]] = 1
+                else:
+                    test_accu2casenum[item[1]] += 1
+                if item[2] not in test_article2casenum:
+                    test_article2casenum[item[2]] = 1
+                else:
+                    test_article2casenum[item[2]] += 1
+        # 测试集和训练集标签差集
+        test_acc = set(list(test_accu2casenum.keys()))
+        train_acc = set(list(train_accu2casenum.keys()))
+        test_art = set(list(test_article2casenum.keys()))
+        train_art = set(list(train_article2casenum.keys()))
+        print(train_acc-test_acc)
+        print(train_art-test_art)
+
+        tr_accu2casenum = sorted(list(train_accu2casenum.items()), key=lambda x: x[1])            
+        te_accu2casenum = sorted(list(test_accu2casenum.items()), key=lambda x: x[1])            
+        tr_article2casenum = sorted(list(train_article2casenum.items()), key=lambda x: x[1])            
+        te_article2casenum = sorted(list(test_article2casenum.items()), key=lambda x: x[1])            
+        
+        return train_accu2casenum, train_article2casenum, test_accu2casenum, test_article2casenum
 
     # statistic corpus
     def getLang(self):
@@ -266,9 +307,9 @@ class DataPreprocess():
 
 
 if __name__=="__main__":
-    dp = DataPreprocess(dataset_base_path="dataset", folders=["CAIL-SMALL", "CAIL-LARGE"], file_names=["test", "train"])
+    dp = DataPreprocess(dataset_base_path="dataset", folders=["CAIL-SMALL"], file_names=["test", "train"])
+    # dp.data_filter()
     dp.dataset_statistic()
-    # dp.data_process()
     # dp.getLang()
 
 
