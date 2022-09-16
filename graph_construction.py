@@ -1,12 +1,7 @@
 # encoding=utf-8
 # 首先获取每个指控或者法律条款对应的case descs
 # 计算每个指控或者法律条款对应的tf-idf向量
-from distutils.log import set_threshold
 import json
-import thulac
-import utils
-import jieba
-import os
 import pickle
 import math
 import numpy as np
@@ -106,8 +101,6 @@ def test_contrust_graph():
     m, g = graph_construction.contrust_graph(d, 0.5)
     print(m, g)
 
-
-
 if __name__=="__main__":
     data_paths = ["dataset/CAIL-SMALL/train_seg.txt","dataset/CAIL-LARGE/train_seg.txt"]
     lang_paths = ["dataset/CAIL-SMALL/train_seg_lang.pkl", "dataset/CAIL-LARGE/train_seg_lang.pkl"]
@@ -119,11 +112,12 @@ if __name__=="__main__":
             lang = pickle.load(f)
         print("获取label-case字典...")
         dicts = idx2cases(data_paths[i])
-        print("为每个lebel计算tf-idf表示向量")
+        print("为每个lebel计算tf-idf表示向量...")
         for d in dicts:
             rep = tf_idf(d, lang)
             label_reps.append(rep)
-        print("为label构造相似图")
+        print("为label构造相似图...")
+        
         
         
 
