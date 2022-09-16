@@ -4,6 +4,7 @@
 import json
 import pickle
 import math
+import time 
 import numpy as np
 
 def idx2cases(path):
@@ -113,9 +114,11 @@ if __name__=="__main__":
         print("获取label-case字典...")
         dicts = idx2cases(data_paths[i])
         print("为每个lebel计算tf-idf表示向量...")
+        start = time.time()
         for d in dicts:
             rep = tf_idf(d, lang)
             label_reps.append(rep)
+        print(f"{round((time.time()-start)/60, 6)}min")
         print("为label构造相似图...")
         
         
