@@ -188,7 +188,7 @@ class DataPreprocess():
                             example_fact_seg = [word for word in example_fact_seg if word not in punctuations]
                             example_fact_seg = "".join(example_fact_seg)
                             # 删除过短文本
-                            if len(example_fact_seg) < 10:
+                            if len(example_fact_seg) < 15:
                                 continue
 
                             item.append(example_fact_seg)
