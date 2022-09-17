@@ -67,8 +67,9 @@ def tf_idf(dic, lang):
             item_1 = dist_in_cate(values, token)
             item_2 = freq_in_cate(values, token)
             item_3 = idf(dic,token)
-            tf_idf_rep[i] = item_1*item_2*item_3
+            tf_idf_rep[i-1] = item_1*item_2*item_3
         idx2tf_idf[key] = tf_idf_rep
+        print(f"{key} : {tf_idf_rep}")
     return idx2tf_idf
 
 def contrust_graph(dic,threshold):
