@@ -35,9 +35,7 @@ class Params():
 
 
         if section == "grubase":
-            pass 
-            
-        
+            pass         
 
 class Lang:
     # 语料库对象

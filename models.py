@@ -2,7 +2,7 @@ import torch
 import pickle
 import torch.nn as nn 
 import numpy as np
-import graph_construction
+import label_sim_graph_construction.graph_construction as graph_construction
 from torch.nn.utils.rnn import pad_sequence, pack_padded_sequence, pad_packed_sequence
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -87,4 +87,7 @@ class GRUBase(nn.Module):
         penalty_preds = self.penaltyPreds(outputs_mean)
 
         return charge_preds, article_preds, penalty_preds
-
+b = [[1],[2],[3],[4]]
+a = np.random.choice(range(len(b)), size=2, replace=False)
+print(a)
+print([b[i] for i in a])
