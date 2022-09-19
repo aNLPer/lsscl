@@ -1,3 +1,5 @@
+import sys, os
+sys.path.append(os.path.dirname(__file__))
 import re
 import random
 import math
@@ -18,7 +20,7 @@ class Params():
         self.config.read('train_config.cfg', encoding="utf-8")
         
         # 读取超参数
-        if section == "gru-base":
+        if self.section == "gru-base":
             self.EPOCH = int(self.config.get(self.section, "EPOCH"))
             self.BATCH_SIZE = int(self.config.get(self.section, "BATCH_SIZE"))
             self.EM_SIZE = int(self.config.get(self.section, "EM_SIZE")) # token emb size
@@ -34,7 +36,7 @@ class Params():
             self.NUM_CYCLES = int(self.config.get(self.section,"NUM_CYCLES"))
             self.MODE = str(self.config.get(self.section,"MODE")).split(",")
 
-        if section == "gru-lsscl":
+        if self.section == "gru-lsscl":
             pass         
 
 class Lang:
