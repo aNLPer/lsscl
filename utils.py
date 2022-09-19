@@ -31,6 +31,7 @@ class Params():
         self.WARMUP_STEP = int(self.config.get(self.section, "WARMUP_STEP")) 
         self.STEP = int(self.config.get(self.section,"STEP"))
         self.NUM_CYCLES = int(self.config.get(self.section,"NUM_CYCLES"))
+        self.MODE = str(self.config.get(self.section,"MODE"))
 
 
 

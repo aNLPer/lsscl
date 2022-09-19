@@ -18,7 +18,7 @@ class GRUBase(nn.Module):
                  num_layers=2,
                  bidirectional=True,
                  dropout=0.6,
-                 mode="concat"):
+                 mode="multi"):
         super(GRUBase, self).__init__()
 
         self.hidden_size = hidden_size
@@ -79,11 +79,31 @@ class GRUBase(nn.Module):
         unpacked_lens = unpacked_lens.unsqueeze(dim=1).to(device)
         outputs_mean = outputs_sum/unpacked_lens
 
-        # [batch_size, charge_label_size]
-        charge_preds = self.chargePreds(outputs_mean)
-        # [batch_size, article_label_size]
-        article_preds = self.articlePreds(outputs_mean)
-        # [batch_size, penalty_label_size]
-        penalty_preds = self.penaltyPreds(outputs_mean)
+        if self.mode == "multi":
+            # [batch_size, charge_label_size]
+            charge_preds = self.chargePreds(outputs_mean)
+            # [batch_size, article_label_size]
+            article_preds = self.articlePreds(outputs_mean)
+            # [batch_size, penalty_label_size]
+            penalty_preds = self.penaltyPreds(outputs_mean)
+            return charge_preds, article_preds, penalty_preds
 
-        return charge_preds, article_preds, penalty_preds
+        if self.mode == "charge":
+            # [batch_size, charge_label_size]
+            charge_preds = self.chargePreds(outputs_mean)
+            return charge_preds
+
+        if self.mode == "article":
+             # [batch_size, article_label_size]
+            article_preds = self.articlePreds(outputs_mean)
+            return article_preds
+        if self.mode == "penalty":
+            # [batch_size, penalty_label_size]
+            penalty_preds = self.penaltyPreds(outputs_mean)
+            return penalty_preds
+
+        
+
+
+
+
