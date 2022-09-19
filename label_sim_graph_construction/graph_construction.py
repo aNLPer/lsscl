@@ -9,7 +9,7 @@ import pickle
 import math
 import time 
 import numpy as np
-select_size = 32
+select_size = 50
 threshold = 0.5
 
 def data_pre(path):
@@ -110,7 +110,7 @@ def contrust_graph(dic,threshold):
     arr = np.array([v for v in dic.values()])
     for i in range(arr.shape[0]):
         for j in range(arr.shape[0]):
-            cos_sim = arr[i].dot(arr[j])/(np.linalg.norm(arr[i])*np.linalg.norm(arr[j]))
+            cos_sim = arr[i][1:].dot(arr[j][1:])/(np.linalg.norm(arr[i][1:])*np.linalg.norm(arr[j][1:]))
             if cos_sim>threshold:
                 sim_matrix[i][j] = cos_sim
             else:
@@ -145,11 +145,15 @@ if __name__=="__main__":
     # with open(f"{select_size}_small_label_reps.pkl", "wb") as f:
     #      pickle.dump(label_reps, f)
     
-    with open("32_small_label_reps.pkl", "rb") as f:
+    with open("label_sim_graph_construction/32_small_label_reps.pkl", "rb") as f:
         reps = pickle.load(f)
-    for rep in reps:
-        contrust_graph(rep)
-
+    for name, rep in zip(["charge_sim_graph", "article_sim_graph", "penalty_sim_graph"], reps):
+        graph = contrust_graph(rep, threshold=threshold)
+        with open(f"label_sim_graph_construction/{name}.pkl","wb") as f:
+            pickle.dump(graph, f)
+    with open("label_sim_graph_construction/article_sim_graph.pkl", "rb") as f:
+        graph = pickle.load(f)
+    print(graph)
     # data_paths = ["dataset/CAIL-SMALL/train_seg.txt","dataset/CAIL-LARGE/train_seg.txt"]
     # lang_paths = ["dataset/CAIL-SMALL/train_seg_lang.pkl", "dataset/CAIL-LARGE/train_seg_lang.pkl"]
     # threshold = 0.5
