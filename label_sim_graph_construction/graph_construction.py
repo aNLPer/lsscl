@@ -151,7 +151,7 @@ if __name__=="__main__":
         graph = contrust_graph(rep, threshold=threshold)
         with open(f"label_sim_graph_construction/{name}.pkl","wb") as f:
             pickle.dump(graph, f)
-    with open("label_sim_graph_construction/article_sim_graph.pkl", "rb") as f:
+    with open("label_sim_graph_construction/charge_sim_graph.pkl", "rb") as f:
         graph = pickle.load(f)
     print(graph)
     # data_paths = ["dataset/CAIL-SMALL/train_seg.txt","dataset/CAIL-LARGE/train_seg.txt"]

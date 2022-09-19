@@ -102,7 +102,6 @@ class GRUBase(nn.Module):
             penalty_preds = self.penaltyPreds(outputs_mean)
             return penalty_preds
 
-        
 
 
 

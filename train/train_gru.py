@@ -144,8 +144,7 @@ def train():
 
                     # 更新学习率
                     scheduler.step()
-                    
-                    break
+      
                 train_loss_records.append(total_train_loss/len(train_seq))
 
                 # 训练完一个EPOCH后评价模型
@@ -195,8 +194,7 @@ def train():
                         article_confusMat.updateMat(val_article_preds.cpu().numpy(), np.array(val_article_label))
                     if mode == "multi" or mode == "penalty":  
                         penalty_confusMat.updateMat(val_penalty_preds.cpu().numpy(), np.array(val_penalty_label))
-                    
-                    break
+
                 valid_loss_records.append(total_valid_loss/len(test_seq))
 
                 # acc
