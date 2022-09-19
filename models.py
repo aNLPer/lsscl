@@ -12,17 +12,17 @@ class GRUBase(nn.Module):
                  charge_label_size,
                  article_label_size,
                  penalty_label_size,
-                 voc_size, # 词汇表
-                 pretrained_model,
-                 hidden_size=300, # 隐藏状态size，
+                 pretrained_w2c,
+                 input_size,
+                 hidden_size=512, # 隐藏状态size，
                  num_layers=2,
                  bidirectional=True,
                  dropout=0.6,
                  mode="concat"):
         super(GRUBase, self).__init__()
 
-        self.voc_size = voc_size
         self.hidden_size = hidden_size
+        self.input_size = input_size
         self.num_layers = num_layers
         self.dropout = dropout
         self.bidirectional = bidirectional
@@ -30,13 +30,13 @@ class GRUBase(nn.Module):
         self.article_label_size = article_label_size
         self.penalty_label_size = penalty_label_size
         self.mode = mode
-        self.pretrained_model = pretrained_model
+        self.pretrained_model = pretrained_w2c
 
         # self.em = nn.Embedding(self.voc_size, self.hidden_size, padding_idx=0)
         vectors = torch.tensor(self.pretrained_model.vectors, dtype=torch.float32).to(device)
         self.em = nn.Embedding.from_pretrained(vectors, freeze=False)
 
-        self.enc = nn.GRU(input_size=self.hidden_size,
+        self.enc = nn.GRU(input_size=self.input_size,
                           hidden_size=self.hidden_size,
                           num_layers=self.num_layers,
                           dropout=self.dropout,
@@ -87,7 +87,3 @@ class GRUBase(nn.Module):
         penalty_preds = self.penaltyPreds(outputs_mean)
 
         return charge_preds, article_preds, penalty_preds
-b = [[1],[2],[3],[4]]
-a = np.random.choice(range(len(b)), size=2, replace=False)
-print(a)
-print([b[i] for i in a])
