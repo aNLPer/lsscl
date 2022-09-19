@@ -355,10 +355,10 @@ def data_loader(seq, charge_labels, article_labels, penalty_labels, shuffle, bat
               [article_labels[j] for j in ids], \
               [penalty_labels[j] for j in ids]
 
-def data_loader_cycle(accu2case, accu2desc):
-    max_length = max([len(cases) for _, cases in accu2case.items()])
+def data_loader_cycle(idx2case):
+    max_length = max([len(cases) for _, cases in idx2case.items()])
     for i in range(max_length):
-        samples = [cases[i%len(cases)] for key, cases in accu2case.items()]
+        samples = [cases[i%len(cases)] for key, cases in idx2case.items()]
         yield [sample[0] for sample in samples], \
               [sample[1] for sample in samples], \
               [sample[2] for sample in samples], \
@@ -427,10 +427,10 @@ def train_distloss_fun(outputs, radius = 10):
 
 def penalty_constrain(outputs, radius = 10):
     """
-        :param outputs: [posi_size, batch_size/posi_size, hidden_dim]
-        :param radius: 大于radius的预测刑期优化
-        :return:
-        """
+    :param outputs: [posi_size, batch_size/posi_size, hidden_dim]
+    :param radius: 大于radius的预测刑期优化
+    :return:
+    """
     posi_size = outputs.shape[0]
     batch_size = outputs.shape[1]
     y = torch.zeros(outputs.shape[1]).to(device)
