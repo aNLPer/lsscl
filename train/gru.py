@@ -15,9 +15,9 @@ from torch.nn.utils.rnn import pad_sequence
 from transformers import get_linear_schedule_with_warmup, get_cosine_with_hard_restarts_schedule_with_warmup, get_cosine_schedule_with_warmup
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-corpus_info_path = ["dataset/CAIL-SMALL/lang.pkl", "dataset/CAIL-LARGE/lang.pkl"]
-dataset_path = ["dataset/CAIL-SMALL", "dataset/CAIL-LARGE"]
-pretrain_lm = "dataset/pretrain/law_token_vec_300.bin"
+corpus_info_path = ["dataset/CAIL-LARGE/lang.pkl"]
+dataset_path = ["dataset/CAIL-LARGE"]
+pretrain_lm = "dataset/pretrain_w2c/law_token_vec_300.bin"
 
 print("load model params...")
 param = utils.Params("gru-base")
@@ -30,16 +30,16 @@ def train():
     for i in range(len(dataset_path)):
         with open(corpus_info_path[i], "rb") as f:
             lang = pickle.load(f)
-        print(f"load {lang.name}_corpus info...")
+        print(f"loading {lang.name}_corpus info...")
 
-        print(f"load {dataset_path[i]} train data...")
+        print(f"loading {dataset_path[i]} train data...")
         train_seq, train_charge_labels, train_article_labels, train_penalty_labels = \
                                                             utils.prepare_data(os.path.join(dataset_path[i], "train.txt"), 
                                                                                 lang,
                                                                                 max_length=param.MAX_LENGTH, 
                                                                                 pretrained_vec=pretrained_w2c)
                                                                         
-        print(f"load {dataset_path[i]} test data...")
+        print(f"loading {dataset_path[i]} test data...")
         test_seq, test_charge_labels, test_article_labels, test_penalty_labels = \
                                                             utils.prepare_data(os.path.join(dataset_path[i], "test.txt"), 
                                                                                 lang, 

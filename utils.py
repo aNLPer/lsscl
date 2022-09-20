@@ -355,14 +355,18 @@ def data_loader(seq, charge_labels, article_labels, penalty_labels, shuffle, bat
               [article_labels[j] for j in ids], \
               [penalty_labels[j] for j in ids]
 
-def data_loader_cycle(idx2case):
-    max_length = max([len(cases) for _, cases in idx2case.items()])
+def data_loader_cycle(idx2cases, positive_size=2):
+    """
+    遍历数据集选取数据
+    positive_size: 正样本个数
+    samples : [positive_size, N_classes, 4]
+    """
+    max_length = max([len(cases) for _, cases in idx2cases.items()])
+    samples = []
     for i in range(max_length):
-        samples = [cases[i%len(cases)] for key, cases in idx2case.items()]
-        yield [sample[0] for sample in samples], \
-              [sample[1] for sample in samples], \
-              [sample[2] for sample in samples], \
-              [sample[3] for sample in samples],
+        for j in range(1,positive_size):
+            samples.append([cases[(i+j)%len(cases)] for _, cases in idx2cases.items()])
+        yield samples
 
 def data_loader_forBert(file_path):
     seqs = []
