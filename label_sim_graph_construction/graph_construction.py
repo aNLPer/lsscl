@@ -9,8 +9,7 @@ import pickle
 import math
 import time 
 import numpy as np
-select_size = 50
-threshold = 0.5
+
 
 def data_pre(path):
     """
@@ -136,6 +135,10 @@ def test_contrust_graph():
     print(m, g)
 
 if __name__=="__main__":
+    select_size = 50
+    threshold = -1
+
+
     # data_zip = data_pre(path="dataset/CAIL-SMALL/train_seg.txt")
     # label_reps = []
     # print("calculating tf_idf reps...")
@@ -145,12 +148,12 @@ if __name__=="__main__":
     # with open(f"{select_size}_small_label_reps.pkl", "wb") as f:
     #      pickle.dump(label_reps, f)
     
-    with open("label_sim_graph_construction/32_small_label_reps.pkl", "rb") as f:
-        reps = pickle.load(f)
-    for name, rep in zip(["charge_sim_graph", "article_sim_graph", "penalty_sim_graph"], reps):
-        graph = contrust_graph(rep, threshold=threshold)
-        with open(f"label_sim_graph_construction/{name}.pkl","wb") as f:
-            pickle.dump(graph, f)
+    # with open("label_sim_graph_construction/32_small_label_reps.pkl", "rb") as f:
+    #     reps = pickle.load(f)
+    # for name, rep in zip(["charge_sim_graph", "article_sim_graph", "penalty_sim_graph"], reps):
+    #     graph = contrust_graph(rep, threshold=threshold)
+    #     with open(f"label_sim_graph_construction/{name}.pkl","wb") as f:
+    #         pickle.dump(graph, f)
     with open("label_sim_graph_construction/charge_sim_graph.pkl", "rb") as f:
         graph = pickle.load(f)
     print(graph)
