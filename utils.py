@@ -201,36 +201,6 @@ def sum_dict(data_dict):
         sum+= v
     return sum
 
-# 大写数字转阿拉伯数字
-def hanzi_to_num(hanzi_1):
-    # for num<10000
-    hanzi = hanzi_1.strip().replace('零', '')
-    if hanzi == '':
-        return str(int(0))
-    d = {'一': 1, '二': 2, '三': 3, '四': 4, '五': 5, '六': 6, '七': 7, '八': 8, '九': 9, '': 0}
-    m = {'十': 1e1, '百': 1e2, '千': 1e3, }
-    w = {'万': 1e4, '亿': 1e8}
-    res = 0
-    tmp = 0
-    thou = 0
-    for i in hanzi:
-        if i not in d.keys() and i not in m.keys() and i not in w.keys():
-            return hanzi
-
-    if (hanzi[0]) == '十': hanzi = '一' + hanzi
-    for i in range(len(hanzi)):
-        if hanzi[i] in d:
-            tmp += d[hanzi[i]]
-        elif hanzi[i] in m:
-            tmp *= m[hanzi[i]]
-            res += tmp
-            tmp = 0
-        else:
-            thou += (res + tmp) * w[hanzi[i]]
-            tmp = 0
-            res = 0
-    return int(thou + res + tmp)
-
 # 过滤掉值小于100的项目
 def filter_dict(data_dict, bound=100):
     return {k: v for k, v in data_dict.items() if v >= bound}
@@ -264,7 +234,6 @@ def get_acc_desc(file_path):
             if dict["accusation"] not in acc2desc:
                 acc2desc[dict["accusation"]] = dict["desc"]
     return acc2desc
-
 
 # 获取batch
 def contras_data_loader(accu2case,
@@ -342,7 +311,6 @@ def contras_data_loader(accu2case,
 
     return seq, accu_labels, article_labels, penalty_labels
 
-
 def data_loader(seq, charge_labels, article_labels, penalty_labels, shuffle, batch_size):
     num_examples = len(seq)
     indices = list(range(num_examples))
@@ -368,20 +336,6 @@ def data_loader_cycle(idx2cases, positive_size=2):
             samples.append([cases[(i+j)%len(cases)] for _, cases in idx2cases.items()])
         yield samples
 
-def data_loader_forBert(file_path):
-    seqs = []
-    c_labels = []
-    a_labels = []
-    p_labels = []
-    with open(file_path, "r", encoding="utf-8") as f:
-        for line in f:
-            item = json.loads(line)
-            seqs.append(item[0])
-            c_labels.append(item[1])
-            a_labels.append(item[2])
-            p_labels.append(item[3])
-    return seqs, c_labels, a_labels, p_labels
-
 def load_accu2desc(file_path, pretrained_vec=None):
     accu2desc = {}
     with open(file_path, "r", encoding="utf-8") as f:
@@ -396,7 +350,6 @@ def load_accu2desc(file_path, pretrained_vec=None):
             if accu not in accu2desc:
                 accu2desc[accu] = desc
     return accu2desc
-
 
 def train_distloss_fun(outputs, radius = 10):
     """
@@ -446,17 +399,6 @@ def penalty_constrain(outputs, radius = 10):
             penalty_constrain_loss += torch.sum(torch.where(dist>radius, dist, y))
     return penalty_constrain_loss/batch_size
 
-def accumulated_accuracy(preds, labels):
-    pred_flat = np.argmax(preds, axis=1).flatten()
-    labels_flat = labels.flatten()
-    return np.sum(pred_flat == labels_flat), len(labels_flat)
-
-def genConfusMat(confusMat, preds, labels):
-    pred_flat = np.argmax(preds, axis=1).flatten()
-    labels_flat = labels.flatten()
-    for i in range(len(labels_flat)):
-        confusMat[labels_flat[i]][pred_flat[i]] += 1
-
 def prepare_data(resourcefile, lang, max_length, pretrained_vec=None):
     seq = []
     charge_labels = []
@@ -482,14 +424,40 @@ def prepare_data(resourcefile, lang, max_length, pretrained_vec=None):
             penaty_labels.append(item[3])
     return seq, charge_labels,  article_labels, penaty_labels
 
-def check_data(lang, seq, c_label, a_label, p_label):
-    seq_w = []
-    for s in seq:
-        s = s.tolist()
-        seq_w.append("".join([lang.index2word[i] for i in s]))
-    c_label_w = [lang.index2accu[i] for i in c_label]
-    a_label_w = [lang.index2art[i] for i in a_label]
-    return seq_w, c_label_w, a_label_w
+def load_idx2cases(path, lang, max_length, pretrained_vec):
+    charge2cases={}
+    article2cases={}
+    penalty2cases={}
+    with open(path, "r", encoding="utf-8") as f:
+        for line in f:
+            item = json.loads(line)
+            if pretrained_vec is not None:
+                case = [pretrained_vec.get_index(w) if w in pretrained_vec.key_to_index.keys()
+                        else pretrained_vec.get_index("") for w in item[0]]
+            else:
+                case = [lang.word2index[w] for w in item[0]]
+
+            if len(case)<=max_length:
+                case_clip = case
+            else:
+                case_clip = case[-max_length:]
+
+            if lang.accu2index[item[1]] not in charge2cases:
+                charge2cases[lang.accu2index[item[1]]] = [case_clip]
+            else:
+                charge2cases[lang.accu2index[item[1]]].append(case_clip)
+
+            if lang.art2index[item[2]] not in article2cases:
+                article2cases[lang.art2index[item[2]]] = [case_clip]
+            else:
+                article2cases[lang.art2index[item[2]]].append(case_clip)
+
+            if item[3] not in penalty2cases:
+                penalty2cases[item[3]] = [case_clip]
+            else:
+                penalty2cases[item[3]].append(case_clip)
+
+    return charge2cases, article2cases, penalty2cases
 
 # law内容过滤
 def filterStr(law):
@@ -519,36 +487,6 @@ def filterStr(law):
     law = pattern_bracket.sub("", law)
 
     return law
-
-def make_accu2case_dataset(filename, lang, input_idx, accu_idx, max_length, pretrained_vec=None):
-    accu2case = {}
-    with open(filename, "r", encoding="utf-8") as f:
-        for line in f:
-            item = json.loads(line)
-            if pretrained_vec is not None:
-                case = [pretrained_vec.get_index(w) if w in pretrained_vec.key_to_index.keys()
-                        else pretrained_vec.get_index("") for w in item[input_idx]]
-            else:
-                case = [lang.word2index[w] for w in item[input_idx]]
-
-            if len(case) <= max_length:
-                case_clip = case
-            else:
-                case_clip = case[-max_length:]
-
-            if item[accu_idx] not in accu2case:
-                accu2case[item[accu_idx]] = [[case_clip,lang.accu2index[item[accu_idx]], lang.art2index[item[accu_idx+1]], item[accu_idx+2]]]
-            else:
-                accu2case[item[accu_idx]].append([case_clip,lang.accu2index[item[accu_idx]], lang.art2index[item[accu_idx+1]], item[accu_idx+2]])
-
-    return accu2case
-
-def dataset_decay(accu2case, decay_rate):
-    for key, values in accu2case.items():
-        random.shuffle(list(values))
-        if len(values)>100:
-            accu2case[key] = values[:int(len(values)*(1-decay_rate))]
-    return accu2case
 
 # 统计文本长度
 def sample_length(path):
@@ -659,9 +597,6 @@ def val_test_datafilter(resourcefile, targetflie):
 def preds2labels(preds):
     preds = np.argmax(preds, axis=1).flatten()
     return list(preds)
-
-def load_params():
-    pass
 
 if __name__ == "__main__":
     preds = np.array([[0.2,0.8],[0.1,0.9]])

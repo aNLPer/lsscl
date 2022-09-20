@@ -25,7 +25,7 @@ print("load model params...")
 param = utils.Params("gru-base")
 
 print("load pretrained word2vec...")
-pretrained_w2c = gensim.models.KeyedVectors.load_word2vec_format(pretrain_lm, binary=False)
+pretrained_w2v = gensim.models.KeyedVectors.load_word2vec_format(pretrain_lm, binary=False)
 
 def train():
     # 数据集
@@ -36,18 +36,16 @@ def train():
 
         # 训练集的加载需要修改
         print(f"load {dataset_path[i]} train data...")
-        train_seq, train_charge_labels, train_article_labels, train_penalty_labels = \
-                                                            utils.prepare_data(os.path.join(dataset_path[i], "train.txt"), 
-                                                                                lang,
-                                                                                max_length=param.MAX_LENGTH, 
-                                                                                pretrained_vec=pretrained_w2c)
-                                                                        
+        accu2cases, article2cases, penalty2cases = utils.load_idx2cases(path=dataset_path[i],
+                                                                        lang=lang,
+                                                                        max_length=param.MAX_LENGTH,
+                                                                        pretrained_vec=pretrained_w2v)                                                   
         print(f"load {dataset_path[i]} test data...")
         test_seq, test_charge_labels, test_article_labels, test_penalty_labels = \
                                                             utils.prepare_data(os.path.join(dataset_path[i], "test.txt"), 
                                                                                 lang, 
                                                                                 max_length=param.MAX_LENGTH,
-                                                                                pretrained_vec=pretrained_w2c)
+                                                                                pretrained_vec=pretrained_w2v)
         for mode in param.MODE:
             print(f"training mode: {mode}")
             # 定义模型
