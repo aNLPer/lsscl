@@ -8,11 +8,11 @@ import gensim
 import numpy as np
 import utils
 from torch.nn.utils.rnn import pad_sequence
-from utils import prepare_data, data_loader, check_data, Lang
+from utils import prepare_data, data_loader, Lang
 
-# 分析gru输出是否可以在欧式空间区分开confusing la
+# 分析gru输出是否可以在欧式空间区分开similarity
 def ana_gru_output():
-    BS = 20
+    BS = 15
     corpus_info_path = "dataset/CAIL-SMALL/lang.pkl"
     CPATH = "dataset/case_study.txt"
     MPATH = [f"output/train_gru/model-small-charge-2.pkl"]

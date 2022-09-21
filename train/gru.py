@@ -15,15 +15,15 @@ from torch.nn.utils.rnn import pad_sequence
 from transformers import get_linear_schedule_with_warmup, get_cosine_with_hard_restarts_schedule_with_warmup, get_cosine_schedule_with_warmup
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-corpus_info_path = ["dataset/CAIL-LARGE/lang.pkl"]
-dataset_path = ["dataset/CAIL-LARGE"]
-pretrain_lm = "dataset/pretrain_w2c/law_token_vec_300.bin"
+corpus_info_path = ["dataset/CAIL-SMALL/lang.pkl","dataset/CAIL-LARGE/lang.pkl"]
+dataset_path = ["dataset/CAIL-SMALL", "dataset/CAIL-LARGE"]
+w2v_path = "dataset/pretrained_w2v/law_token_vec_300.bin"
 
 print("load model params...")
 param = utils.Params("gru-base")
 
 print("load pretrained word2vec...")
-pretrained_w2c = gensim.models.KeyedVectors.load_word2vec_format(pretrain_lm, binary=False)
+pretrained_w2v = gensim.models.KeyedVectors.load_word2vec_format(w2v_path, binary=False)
 
 def train():
     # 数据集
@@ -37,21 +37,21 @@ def train():
                                                             utils.prepare_data(os.path.join(dataset_path[i], "train.txt"), 
                                                                                 lang,
                                                                                 max_length=param.MAX_LENGTH, 
-                                                                                pretrained_vec=pretrained_w2c)
+                                                                                pretrained_vec=pretrained_w2v)
                                                                         
         print(f"loading {dataset_path[i]} test data...")
         test_seq, test_charge_labels, test_article_labels, test_penalty_labels = \
                                                             utils.prepare_data(os.path.join(dataset_path[i], "test.txt"), 
                                                                                 lang, 
                                                                                 max_length=param.MAX_LENGTH,
-                                                                                pretrained_vec=pretrained_w2c)
+                                                                                pretrained_vec=pretrained_w2v)
         for mode in param.MODE:
             print(f"training mode: {mode}")
             # 定义模型
             model = GRUBase(charge_label_size=len(lang.index2accu),
                             article_label_size=len(lang.index2art),
                             penalty_label_size=param.PENALTY_LABEL_SIZE,
-                            pretrained_w2c=pretrained_w2c,
+                            pretrained_w2v=pretrained_w2v,
                             dropout=param.DROPOUT_RATE,
                             num_layers=param.GRU_LAYERS,
                             input_size=param.EM_SIZE,
@@ -107,7 +107,7 @@ def train():
                     padded_input_ids = pad_sequence(seqs, batch_first=True).to(device)
 
                     if mode == "multi":
-                        charge_preds, article_preds, penalty_preds = model(padded_input_ids, seq_lens)
+                        charge_preds, article_preds, penalty_preds, _ = model(padded_input_ids, seq_lens)
                         # 指控分类误差
                         charge_preds_loss = criterion(charge_preds, torch.tensor(accu_labels).to(device))
                         # 法律条款预测误差
@@ -117,17 +117,17 @@ def train():
                         train_loss = (charge_preds_loss + article_preds_loss+ penalty_preds_loss)
                     
                     if mode == "charge":
-                        charge_preds = model(padded_input_ids, seq_lens)
+                        charge_preds, _ = model(padded_input_ids, seq_lens)
                         # 指控分类误差
                         train_loss = criterion(charge_preds, torch.tensor(accu_labels).to(device))
 
                     if mode == "article":
-                        article_preds = model(padded_input_ids, seq_lens)
+                        article_preds, _ = model(padded_input_ids, seq_lens)
                         # 法律条款预测误差
                         train_loss = criterion(article_preds, torch.tensor(article_labels).to(device))
 
                     if mode == "penalty":
-                        penalty_preds = model(padded_input_ids, seq_lens)
+                        penalty_preds, _ = model(padded_input_ids, seq_lens)
                         # 刑期预测误差
                         train_loss = criterion(penalty_preds, torch.tensor(penalty_labels).to(device))
                     
@@ -169,21 +169,21 @@ def train():
                     val_input_ids = pad_sequence(val_input_ids, batch_first=True).to(device)
                     with torch.no_grad():
                         if mode == "multi":
-                            val_charge_preds, val_article_preds, val_penalty_preds = model(val_input_ids, val_seq_lens)
+                            val_charge_preds, val_article_preds, val_penalty_preds, _ = model(val_input_ids, val_seq_lens)
                             val_charge_preds_loss = criterion(val_charge_preds, torch.tensor(val_charge_label).to(device))
                             val_article_preds_loss = criterion(val_article_preds, torch.tensor(val_article_label).to(device))
                             val_penalty_preds_loss = criterion(val_penalty_preds, torch.tensor(val_penalty_label).to(device))
                             valid_loss = val_charge_preds_loss+val_article_preds_loss+val_penalty_preds_loss
                         if mode == "charge":
-                            val_charge_preds = model(val_input_ids, val_seq_lens)
+                            val_charge_preds, _ = model(val_input_ids, val_seq_lens)
                             valid_loss = criterion(val_charge_preds, torch.tensor(val_charge_label).to(device))
 
                         if mode == "article":
-                            val_article_preds = model(val_input_ids, val_seq_lens)
+                            val_article_preds, _ = model(val_input_ids, val_seq_lens)
                             valid_loss = criterion(val_article_preds, torch.tensor(val_article_label).to(device))
                             
                         if mode == "penalty":
-                            val_penalty_preds = model(val_input_ids, val_seq_lens)
+                            val_penalty_preds, _ = model(val_input_ids, val_seq_lens)
                             valid_loss = criterion(val_penalty_preds, torch.tensor(val_penalty_label).to(device))
                     
                     total_valid_loss += valid_loss.item()
