@@ -1,5 +1,6 @@
 # coding:utf-8
 import sys,os
+
 # sys.path.append('需要作为模块引入的路径')
 # 添加当前路径的前一级文件作为源文件夹
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
@@ -77,11 +78,11 @@ class DataPreprocess():
                             example_fact = example['fact']
                             if len(example_articles) == 1 and \
                                     len(example_accusation) == 1 and \
-                                    '二审' not in example_fact:
+                                    '二审' not in example_fact and \
+                                        len(example_fact) > 10:
                                 # 该案件对应的article和accusation频率都大于100
                                 if dict_articles.__contains__(example_articles[0]) and \
-                                        dict_accusations.__contains__(example_accusation[0]) and \
-                                        len(example_fact) > 10:
+                                        dict_accusations.__contains__(example_accusation[0]): 
                                     dict_articles[example_articles[0]] += 1
                                     dict_accusations[example_accusation[0]] += 1
                                 else:
@@ -110,11 +111,10 @@ class DataPreprocess():
                             if len(example_articles) == 1 and \
                                     len(example_accusation) == 1 and \
                                     '二审' not in example_fact and \
-                                    len(example_fact) >= 10:
+                                    len(example_fact) > 10:
                                 # 该案件对应的article和accusation频率都大于100
                                 if dict_articles.__contains__(example_articles[0]) and \
-                                        dict_accusations.__contains__(example_accusation[0]) and \
-                                        len(example_fact) > 10:
+                                        dict_accusations.__contains__(example_accusation[0]):
                                     fw.write(line)
                                 else:
                                     continue
@@ -149,28 +149,30 @@ class DataPreprocess():
         for folder in self.folders:
             for fn in self.file_names:
                 print(f"start processing data {folder}/{fn}_filtered.json")
-                with open(os.path.join(self.dataset_base_path, folder, f"{fn}_processed.txt"), "w", encoding="utf-8") as fw:
+                with open(os.path.join(self.dataset_base_path, folder, f"{fn}_seg.txt"), "w", encoding="utf-8") as fw:
                     count = 0
                     with open(os.path.join(self.dataset_base_path, folder, f"{fn}_filtered.json"), "r", encoding="utf-8") as f:
                         for line in f:
                             count += 1
                             item = [] # 单条训练数据
                             example = json.loads(line)
-
+                            example_fact = example["fact"]
+                            
+                            pattern = re.compile(r"[\r\n]")
+                            example_fact = pattern.sub("", example_fact)
                             # 过滤law article内容
-                            example_fact = utils.filterStr(example["fact"])
+                            # example_fact = utils.filterStr(example["fact"])
 
-                            if folder == "CAIL-LARGE":
-                                example_fact = example_fact.strip()
-                                pattern = re.compile(r"\n")
-                                content = pattern.search(example_fact)
-                                if content is not None:
-                                    content_span = content.span()
-                                    example_fact = example_fact[:content_span[0]].strip()
+                            # if folder == "CAIL-LARGE":
+                            #     example_fact = example_fact.strip()
+                            #     pattern = re.compile(r"\n")
+                            #     content = pattern.search(example_fact)
+                            #     if content is not None:
+                            #         content_span = content.span()
+                            #         example_fact = example_fact[:content_span[0]].strip()
 
                             # 去除特殊符号
-                            example_fact = [char for char in example_fact if char not in special_symbols and
-                                            char not in ["\n", "\r"]]
+                            example_fact = [char for char in example_fact if char not in special_symbols]
                             example_fact = "".join(example_fact)
 
                             # # 删除过短文本
@@ -179,16 +181,17 @@ class DataPreprocess():
 
                             # 分词
                             example_fact_seg = [word.strip() for word in thu.cut(example_fact, text=True).split(" ")]
-                            # 处理数字和年时间
+                            # 处理时间
                             example_fact_seg = [re.sub(r"\d+?[年月日时点分]", "num", word) for word in example_fact_seg]
                             example_fact_seg = [word for word in example_fact_seg
                                                 if word not in ["num", "下午", "上午", "早上", "凌晨", "晚", "晚上", "许"] and "num" not in word]
 
                             # 去除标点
-                            example_fact_seg = [word for word in example_fact_seg if word not in punctuations]
-                            example_fact_seg = "".join(example_fact_seg)
+                            # example_fact_seg = [word for word in example_fact_seg if word not in punctuations]
+                            # example_fact_seg = "".join(example_fact_seg)
+                            
                             # 删除过短文本
-                            if len(example_fact_seg) < 15:
+                            if len(example_fact_seg) < 10:
                                 continue
 
                             item.append(example_fact_seg)
@@ -200,7 +203,7 @@ class DataPreprocess():
                             example_accu = example["meta"]['accusation'][0]
                             example_accu = example_accu.replace("[", "")
                             example_accu = example_accu.replace("]", "")
-                            example_art = example["meta"]['relevant_articles'][0]
+                            example_art = int(example["meta"]['relevant_articles'][0])
                             item.append(example_accu)
                             item.append(example_art)
                             example_penalty = example["meta"]["term_of_imprisonment"]
@@ -296,39 +299,14 @@ class DataPreprocess():
         te_article2casenum = sorted(list(test_article2casenum.items()), key=lambda x: x[1])            
         
         return train_accu2casenum, train_article2casenum, test_accu2casenum, test_article2casenum
-
-    def segment(self):
-        print("加载分词器...")
-        thu = thulac.thulac(user_dict="preprocess/Thuocl_seg.txt", seg_only=True)
-        print("加载停用词表...")
-        stopwords = []
-        for n in os.listdir("preprocess/stopwords"):
-            stopwords.extend(utils.get_filter_symbols(os.path.join("preprocess/stopwords", n)))
-        stopwords = list(set(stopwords))
-        
-        print("segment...")
-        for folder in self.folders:
-            for fname in self.file_names:
-                print(folder,f"/{fname}")
-                fw = open(os.path.join(self.dataset_base_path, folder, f"{fname}_seg.txt"), "w", encoding="utf-8")
-                with open(os.path.join(self.dataset_base_path, folder, f"{fname}.txt"), "r", encoding="utf-8") as f:
-                    for line in f:
-                        item = json.loads(line)
-                        # 分词并去掉停用词
-                        example_fact_seg = [word.strip() for word in thu.cut(item[0], text=True).split(" ")]
-                        example_fact_seg = [word for word in example_fact_seg if word not in stopwords]
-                        item[0] = example_fact_seg
-                        fw.write(json.dumps(item, ensure_ascii=False)+"\n")
-        fw.close()
-        print("end...")
     
     # statistic corpus
     def getLang(self):
-        file_name = ["train", "train_seg"]
+        file_name = ["train_seg"]
         for folder in self.folders:
             for fn in file_name:
                 lang = Lang()
-                with open(f"dataset/{folder}/{fn}-Lang.pkl", "wb") as lang_f:
+                with open(f"dataset/{folder}/{fn}_lang.pkl", "wb") as lang_f:
                     print(f"processing {folder}/{fn}")
                     with open(os.path.join(self.dataset_base_path, folder, f"{fn}.txt"), "r", encoding="utf-8") as f:
                         for line in f:
@@ -339,15 +317,23 @@ class DataPreprocess():
                     pickle.dump(lang, lang_f)
         print("end...")
 
-
+    def statistic_sen_length(self):
+        length_500 = 0
+        with open("dataset/CAIL-LARGE/train_seg.txt", "r", encoding="utf-8") as f:
+            for line in f:
+                item = json.loads(line)
+                if len(item[0])<500:
+                    length_500+=1
+        print(length_500)
 if __name__=="__main__":
     dp = DataPreprocess(dataset_base_path="dataset", folders=["CAIL-SMALL","CAIL-LARGE"], file_names=["test", "train"])
+    # dp.charc_process()
     # dp.segment()
     # dp.data_filter(acc=[], art=[356])
     # dp.case_filter()
-    dp.getLang()
-
-
+    # dp.getLang()
+    # dp.statistic_sen_length()
+    
 
 
 

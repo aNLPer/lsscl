@@ -1,8 +1,12 @@
 # coding: utf-8
+import sys,os
+# sys.path.append('需要作为模块引入的路径')
+# 添加当前路径的前一级文件作为源文件夹
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 import os
 import json
 import gensim
-from gensim.models import word2vec
+from gensim.models import word2vec, Word2Vec
 from sklearn.decomposition import PCA
 import numpy as np
 
@@ -10,40 +14,39 @@ import logging
 logging.basicConfig(format='%(asctime)s:%(levelname)s:%(message)s', level=logging.INFO)
 
 def data_pre():
-    base_path = "../dataset"
-    folders = ["CAIL-SMALL","CAIL-LARGE"]
-    filenames = ["train_processed_sp.txt"]
-    pretrainfile = open(os.path.join(base_path, "pretrain", "pretrain.txt"), "w", encoding="utf-8")
+    folders = ["CAIL-SMALL", "CAIL-LARGE"]
+    filenames = ["train_seg.txt"]
+    pretrainfile = open(os.path.join("dataset", "pretrained_w2v", "pretrain.txt"), "w", encoding="utf-8")
     for fd in folders:
         for fn in filenames:
-            with open(os.path.join(base_path, fd, fn), "r", encoding="utf-8") as f:
+            with open(os.path.join("dataset", fd, fn), "r", encoding="utf-8") as f:
                 for line in f:
                     item = json.loads(line)
-                    s = item[0].strip()+"\n"
-                    pretrainfile.write(s)
+                    s = json.dumps(item[0], ensure_ascii=False)
+                    pretrainfile.write(s+"\n")
     pretrainfile.close()
 
 class TrainVector:
     def __init__(self):
         cur = '/'.join(os.path.abspath(__file__).split('/')[:-1])
         # 训练语料所在目录
-        self.token_filepath = "../dataset/pretrain/pretrain.txt"
+        self.token_filepath = "dataset/pretrained_w2v/pretrain.txt"
         self.pinyin_filepath = os.path.join(cur, 'train_data/pinyin_train.txt')
         self.postag_filepath = os.path.join(cur, 'train_data/postag_train.txt')
         self.dep_filepath = os.path.join(cur, 'train_data/dep_train.txt')
         self.word_filepath = os.path.join(cur, 'train_data/word_train.txt')
 
         # 向量大小设置
-        self.token_size = 100
+        self.token_size = 200
         self.pinyin_size = 300
         self.dep_size = 10
         self.postag_size = 30
         self.word_size = 300
 
-        self.epochs = 5
+        self.epochs = 8
 
         # 向量文件所在目录
-        self.token_embedding = f"../dataset/pretrain/law_token_vec_{self.token_size}.bin"
+        self.token_embedding = f"dataset/pretrained_w2v/law_token_vec_{self.token_size}.bin"
         self.postag_embedding = os.path.join(cur, 'model/postag_vec_30.bin')
         self.dep_embedding = os.path.join(cur, 'model/dep_vec_10.bin')
         self.pinyin_embedding = os.path.join(cur, 'model/pinyin_vec_300.bin')
@@ -55,14 +58,17 @@ class TrainVector:
         sentences = []
         with open(path, "r", encoding="utf-8") as f:
             for line in f:
-                sentences.append(line)
+                item = json.loads(line)
+                sentences.append(item)
         return sentences
 
     '''基于gensimx训练字符向量,拼音向量,词性向量'''
     def train_vector(self, train_path, embedding_path, embedding_size):
         # sentences = word2vec.Text8Corpus(train_path)  # 加载分词语料
         sentences = self.readPretrainFile(train_path)
-        model = word2vec.Word2Vec(sentences,vector_size=embedding_size, window=5, min_count=5,workers=4,epochs=self.epochs)  # 训练skip-gram模型,默认window=5
+        # model = word2vec.Word2Vec(sentences,vector_size=embedding_size, window=5, min_count=25,workers=4,epochs=self.epochs)  # 训练skip-gram模型,默认window=5
+        model = Word2Vec(sentences,sg=1,vector_size=embedding_size, window=5, min_count=25,workers=4,epochs=self.epochs)
+        model.save(f"dataset/pretrained_w2v/wv_{self.token_size}")
         model.wv.save_word2vec_format(embedding_path, binary=False)
 
 
@@ -106,7 +112,11 @@ class TrainVector:
         return
 
 if __name__ == '__main__':
-    # data_pre()
+    data_pre()
     handler = TrainVector()
     handler.train_main()
-
+    
+    model = Word2Vec.load(f"dataset/pretrained_w2v/wv_200")
+    vec = model.wv['被告人']
+    print(vec)
+    
