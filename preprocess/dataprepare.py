@@ -332,7 +332,8 @@ if __name__=="__main__":
     # dp.case_filter()
     # dp.getLang()
     # dp.statistic_sen_length()
-    acc = ['容留他人吸毒', '动植物检疫徇私舞弊','单位受贿']
+    acc = ['容留他人吸毒', '动植物检疫徇私舞弊','单位受贿', '对单位行贿','妨害作证']
+    
     
 
 
