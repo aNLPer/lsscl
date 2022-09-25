@@ -135,18 +135,16 @@ def test_contrust_graph():
     print(m, g)
 
 if __name__=="__main__":
-    select_size = 50
+    select_size = 32
     threshold = -1
-
-
-    # data_zip = data_pre(path="dataset/CAIL-SMALL/train_seg.txt")
-    # label_reps = []
-    # print("calculating tf_idf reps...")
-    # for d, l in data_zip:
-    #     key2tf_idf = tf_idf(d,l)
-    #     label_reps.append(key2tf_idf)
-    # with open(f"{select_size}_small_label_reps.pkl", "wb") as f:
-    #      pickle.dump(label_reps, f)
+    data_zip = data_pre(path="dataset/train_seg_for_graph.txt")
+    label_reps = []
+    print("calculating tf_idf reps...")
+    for d, l in data_zip:
+        key2tf_idf = tf_idf(d,l)
+        label_reps.append(key2tf_idf)
+    with open(f"{select_size}_large_label_reps.pkl", "wb") as f:
+         pickle.dump(label_reps, f)
     
     # with open("label_sim_graph_construction/32_small_label_reps.pkl", "rb") as f:
     #     reps = pickle.load(f)
@@ -154,9 +152,9 @@ if __name__=="__main__":
     #     graph = contrust_graph(rep, threshold=threshold)
     #     with open(f"label_sim_graph_construction/{name}.pkl","wb") as f:
     #         pickle.dump(graph, f)
-    with open("label_sim_graph_construction/charge_sim_graph.pkl", "rb") as f:
-        graph = pickle.load(f)
-    print(graph)
+    # with open("label_sim_graph_construction/charge_sim_graph.pkl", "rb") as f:
+    #     graph = pickle.load(f)
+    # print(graph)
     # data_paths = ["dataset/CAIL-SMALL/train_seg.txt","dataset/CAIL-LARGE/train_seg.txt"]
     # lang_paths = ["dataset/CAIL-SMALL/train_seg_lang.pkl", "dataset/CAIL-LARGE/train_seg_lang.pkl"]
     # threshold = 0.5

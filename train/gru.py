@@ -17,7 +17,7 @@ from transformers import get_linear_schedule_with_warmup, get_cosine_with_hard_r
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 corpus_info_path = ["dataset/CAIL-SMALL/lang.pkl","dataset/CAIL-LARGE/lang.pkl"]
 dataset_path = ["dataset/CAIL-SMALL", "dataset/CAIL-LARGE"]
-w2v_path = "dataset/pretrained_w2v/law_token_vec_300.bin"
+w2v_path = "dataset/pretrained_w2v/law_token_vec_200.bin"
 
 print("load model params...")
 param = utils.Params("gru-base")

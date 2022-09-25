@@ -9,7 +9,7 @@ import time
 import json
 import pickle
 import gensim
-from models import GRUBase
+from models import GRULSSCL
 import torch.optim as optim
 import torch.nn as nn
 import numpy as np
@@ -19,10 +19,10 @@ from transformers import get_linear_schedule_with_warmup, get_cosine_with_hard_r
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 corpus_info_path = ["dataset/CAIL-SMALL/lang.pkl", "dataset/CAIL-LARGE/lang.pkl"]
 dataset_path = ["dataset/CAIL-SMALL", "dataset/CAIL-LARGE"]
-pretrain_lm = "dataset/pretrain/law_token_vec_300.bin"
+pretrain_lm = "dataset/pretrained_w2v/law_token_vec_200.bin"
 
 print("load model params...")
-param = utils.Params("gru-base")
+param = utils.Params("gru-lsscl")
 
 print("load pretrained word2vec...")
 pretrained_w2v = gensim.models.KeyedVectors.load_word2vec_format(pretrain_lm, binary=False)
@@ -39,20 +39,19 @@ def train():
         accu2cases, article2cases, penalty2cases = utils.load_idx2cases(path=dataset_path[i],
                                                                         lang=lang,
                                                                         max_length=param.MAX_LENGTH,
-                                                                        pretrained_vec=pretrained_w2v)                                                   
+                                                                        pretrained_vec=pretrained_w2v)
+        # param.BATCH_SIZE =                                                    
         print(f"load {dataset_path[i]} test data...")
         test_seq, test_charge_labels, test_article_labels, test_penalty_labels = \
                                                             utils.prepare_data(os.path.join(dataset_path[i], "test.txt"), 
                                                                                 lang, 
                                                                                 max_length=param.MAX_LENGTH,
                                                                                 pretrained_vec=pretrained_w2v)
-        for mode in param.MODE:
+        for mode, idx2cases in zip(param.MODE,[accu2cases, article2cases, penalty2cases]):
             print(f"training mode: {mode}")
             # 定义模型
-            model = GRUBase(charge_label_size=len(lang.index2accu),
-                            article_label_size=len(lang.index2art),
-                            penalty_label_size=param.PENALTY_LABEL_SIZE,
-                            pretrained_w2c=pretrained_w2c,
+            model = GRULSSCL(label_size=len(idx2cases.keys()),
+                            pretrained_w2c=pretrained_w2v,
                             dropout=param.DROPOUT_RATE,
                             num_layers=param.GRU_LAYERS,
                             input_size=param.EM_SIZE,

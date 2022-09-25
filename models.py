@@ -106,9 +106,7 @@ class GRUBase(nn.Module):
 
 class GRULSSCL(nn.Module):
     def __init__(self,
-                 charge_label_size,
-                 article_label_size,
-                 penalty_label_size,
+                 label_size,
                  pretrained_w2v,
                  input_size,
                  hidden_size=512, # 隐藏状态size，
@@ -116,16 +114,14 @@ class GRULSSCL(nn.Module):
                  bidirectional=True,
                  dropout=0.6,
                  mode="multi"):
-        super(GRUBase, self).__init__()
+        super(GRULSSCL, self).__init__()
 
         self.hidden_size = hidden_size
         self.input_size = input_size
         self.num_layers = num_layers
         self.dropout = dropout
         self.bidirectional = bidirectional
-        self.charge_label_size = charge_label_size
-        self.article_label_size = article_label_size
-        self.penalty_label_size = penalty_label_size
+        self.label_size = label_size
         self.mode = mode
         self.pretrained_model = pretrained_w2v
 
@@ -140,31 +136,18 @@ class GRULSSCL(nn.Module):
                           batch_first=True,
                           bidirectional=self.bidirectional)
 
-        self.linear = nn.Linear(2*self.hidden_size, 2*self.hidden_size)
+        self.linear = nn.Linear(2*self.hidden_size, self.hidden_size)
 
-        self.atten = nn.MultiheadAttention(2*self.hidden_size, 2)
-        
+        self.atten = None
 
-        self.chargePreds = nn.Sequential(
+        self.Preds = nn.Sequential(
             nn.Linear(2*self.hidden_size, self.hidden_size),
             nn.BatchNorm1d(self.hidden_size),
             nn.ReLU(),
-            nn.Linear(self.hidden_size, self.charge_label_size)
+            nn.Linear(self.hidden_size, self.label_size)
         )
 
-        self.articlePreds = nn.Sequential(
-            nn.Linear(2*self.hidden_size, self.hidden_size),
-            nn.BatchNorm1d(self.hidden_size),
-            nn.ReLU(),
-            nn.Linear(self.hidden_size, self.article_label_size),
-        )
 
-        self.penaltyPreds = nn.Sequential(
-            nn.Linear(2*self.hidden_size, self.hidden_size),
-            nn.BatchNorm1d(self.hidden_size),
-            nn.ReLU(),
-            nn.Linear(self.hidden_size, self.penalty_label_size),
-        )
 
     def forward(self, input_ids, seq_lens):
         # [batch_size, seq_length, hidden_size]
@@ -181,27 +164,14 @@ class GRULSSCL(nn.Module):
         unpacked_lens = unpacked_lens.unsqueeze(dim=1).to(device)
         outputs_mean = outputs_sum/unpacked_lens
 
-        # [batch_size, 2*hidden_size]
+        # [batch_size, hidden_size]
         contras_vec = self.linear(outputs_mean)
+
+        # [batch_size, charge_label_size]
+        preds = self.Preds(contras_vec)
+
+        return preds, contras_vec
+
         
-        # [batch_size, 2*hidden_size]
-
-
-
-        if self.mode == "charge":
-            # [batch_size, charge_label_size]
-            charge_preds = self.chargePreds(outputs_mean)
-            return charge_preds, outputs_mean
-
-        if self.mode == "article":
-             # [batch_size, article_label_size]
-            article_preds = self.articlePreds(outputs_mean)
-            return article_preds, outputs_mean
-        if self.mode == "penalty":
-            # [batch_size, penalty_label_size]
-            penalty_preds = self.penaltyPreds(outputs_mean)
-            return penalty_preds, outputs_mean
-
-
 
 

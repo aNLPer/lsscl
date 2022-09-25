@@ -251,14 +251,14 @@ class DataPreprocess():
     
     # 数据统计并过滤掉训练数据少于阈值的case
     def dataset_statistic(self):
-        with open("label_sim_graph_construction/charge_sim_graph.pkl", "rb") as f:
-            graph = pickle.load(f)
+        with open("label_sim_graph_construction/32_small_article_sim_graph.pkl", "rb") as f:
+            graph_art_2 = pickle.load(f)
 
         train_accu2casenum = {}
         train_article2casenum = {}
         test_accu2casenum = {}
         test_article2casenum = {}
-        with open(os.path.join(self.dataset_base_path, "CAIL-SMALL", "train_seg.txt"), "r", encoding="utf-8") as f:
+        with open(os.path.join(self.dataset_base_path, "train_seg_for_graph.txt"), "r", encoding="utf-8") as f:
             for line in f:
                 item = json.loads(line)
                 if item[1] not in train_accu2casenum:
@@ -269,7 +269,7 @@ class DataPreprocess():
                     train_article2casenum[item[2]] = 1
                 else:
                     train_article2casenum[item[2]] += 1
-        with open(os.path.join(self.dataset_base_path, "CAIL-SMALL", "test_seg.txt"), "r", encoding="utf-8") as f:
+        with open(os.path.join(self.dataset_base_path, "CAIL-LARGE", "train.txt"), "r", encoding="utf-8") as f:
             for line in f:
                 item = json.loads(line)
                 if item[1] not in test_accu2casenum:
@@ -280,8 +280,16 @@ class DataPreprocess():
                     test_article2casenum[item[2]] = 1
                 else:
                     test_article2casenum[item[2]] += 1
+        # for key in train_accu2casenum.keys():
+        #     print(f"{key}: {train_accu2casenum[key]}   {test_accu2casenum[key]}")
 
+        # for key in train_article2casenum.keys():
+        #     if key not in test_article2casenum:
+        #         print(f"article {key} not in test")
+        #         continue
+        #     print(f"{key}: {train_article2casenum[key]}   {test_article2casenum[key]}")
 
+        
         # # 测试集和训练集标签差集
         # test_acc = set(list(test_accu2casenum.keys()))
         # train_acc = set(list(train_accu2casenum.keys()))
@@ -300,11 +308,11 @@ class DataPreprocess():
     
     # statistic corpus
     def getLang(self):
-        file_name = ["train_seg"]
+        file_name = ["train"]
         for folder in self.folders:
             for fn in file_name:
                 lang = Lang()
-                with open(f"dataset/{folder}/{fn}_lang.pkl", "wb") as lang_f:
+                with open(f"dataset/{folder}/lang.pkl", "wb") as lang_f:
                     print(f"processing {folder}/{fn}")
                     with open(os.path.join(self.dataset_base_path, folder, f"{fn}.txt"), "r", encoding="utf-8") as f:
                         for line in f:
@@ -323,17 +331,24 @@ class DataPreprocess():
                 if len(item[0])<500:
                     length_500+=1
         print(length_500)
+
 if __name__=="__main__":
-    dp = DataPreprocess(dataset_base_path="dataset", folders=["CAIL-SMALL","CAIL-LARGE"], file_names=["test", "train"])
+    dp = DataPreprocess(dataset_base_path="dataset", folders=["CAIL-LARGE"], file_names=["test","train"])
+    # dp.case_filter()
     dp.dataset_statistic()
     # dp.charc_process()
-    # dp.segment()
-    # dp.data_filter(acc=[], art=[356])
-    # dp.case_filter()
+    # acc = []
+    # art = [356]
+    # dp.data_filter(acc=acc, art=art)
     # dp.getLang()
     # dp.statistic_sen_length()
-    acc = ['容留他人吸毒', '动植物检疫徇私舞弊','单位受贿', '对单位行贿','妨害作证']
+
+            
+
+
     
+    
+
     
 
 

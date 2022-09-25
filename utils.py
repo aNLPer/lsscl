@@ -19,24 +19,25 @@ class Params():
         self.config.read('train_config.cfg', encoding="utf-8")
         
         # 读取超参数
-        if self.section == "gru-base":
-            self.EPOCH = int(self.config.get(self.section, "EPOCH"))
-            self.BATCH_SIZE = int(self.config.get(self.section, "BATCH_SIZE"))
-            self.EM_SIZE = int(self.config.get(self.section, "EM_SIZE")) # token emb size
-            self.GRU_HIDDEN_SIZE = int(self.config.get(self.section, "GRU_HIDDEN_SIZE")) # encoder 隐藏层维度
-            self.MAX_LENGTH = int(self.config.get(self.section, "MAX_LENGTH")) # seq max length
-            self.GRU_LAYERS = int(self.config.get(self.section, 'GRU_LAYERS'))  
-            self.DROPOUT_RATE = float(self.config.get(self.section, "DROPOUT_RATE"))
-            self.PENALTY_LABEL_SIZE = int(self.config.get(self.section, "PENALTY_LABEL_SIZE"))
-            self.LR = float(self.config.get(self.section, "LR"))
-            self.L2 = float(self.config.get(self.section, "L2"))
-            self.WARMUP_STEP = int(self.config.get(self.section, "WARMUP_STEP")) 
-            self.STEP = int(self.config.get(self.section,"STEP"))
-            self.NUM_CYCLES = int(self.config.get(self.section,"NUM_CYCLES"))
-            self.MODE = str(self.config.get(self.section,"MODE")).split(",")
+        # if self.section == "gru-base":
+        self.EPOCH = int(self.config.get(self.section, "EPOCH"))
+        self.BATCH_SIZE = int(self.config.get(self.section, "BATCH_SIZE"))
+        self.EM_SIZE = int(self.config.get(self.section, "EM_SIZE")) # token emb size
+        self.GRU_HIDDEN_SIZE = int(self.config.get(self.section, "GRU_HIDDEN_SIZE")) # encoder 隐藏层维度
+        self.MAX_LENGTH = int(self.config.get(self.section, "MAX_LENGTH")) # seq max length
+        self.GRU_LAYERS = int(self.config.get(self.section, 'GRU_LAYERS'))  
+        self.DROPOUT_RATE = float(self.config.get(self.section, "DROPOUT_RATE"))
+        self.PENALTY_LABEL_SIZE = int(self.config.get(self.section, "PENALTY_LABEL_SIZE"))
+        self.LR = float(self.config.get(self.section, "LR"))
+        self.L2 = float(self.config.get(self.section, "L2"))
+        self.WARMUP_STEP = int(self.config.get(self.section, "WARMUP_STEP")) 
+        self.STEP = int(self.config.get(self.section,"STEP"))
+        self.NUM_CYCLES = int(self.config.get(self.section,"NUM_CYCLES"))
+        self.MODE = str(self.config.get(self.section,"MODE")).split(",")
 
         if self.section == "gru-lsscl":
-            pass         
+            self.POSITIVE_SIZE = int(self.config.get(self.section, "POSITIVE_SIZE")) 
+                     
 
 class Lang:
     # 语料库对象
