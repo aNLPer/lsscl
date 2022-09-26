@@ -21,6 +21,7 @@ corpus_info_path = ["dataset/CAIL-SMALL/lang.pkl", "dataset/CAIL-LARGE/lang.pkl"
 dataset_path = ["dataset/CAIL-SMALL", "dataset/CAIL-LARGE"]
 pretrain_lm = "dataset/pretrained_w2v/law_token_vec_200.bin"
 
+
 print("load model params...")
 param = utils.Params("gru-lsscl")
 
@@ -34,27 +35,30 @@ def train():
             lang = pickle.load(f)
         print(f"load {lang.name}_corpus info...")
 
-        # 训练集的加载需要修改
+        # 训练集加载
         print(f"load {dataset_path[i]} train data...")
-        accu2cases, article2cases, penalty2cases = utils.load_idx2cases(path=dataset_path[i],
+        accu2cases, article2cases, penalty2cases = utils.load_idx2cases(os.path.join(dataset_path[i],"train.txt"),
                                                                         lang=lang,
                                                                         max_length=param.MAX_LENGTH,
                                                                         pretrained_vec=pretrained_w2v)
-        for sample, labels in utils.data_loader_cycle(accu2cases, positive_size=2):
-            print("_")
         
+        # 加载测试集
         print(f"load {dataset_path[i]} test data...")
         test_seq, test_charge_labels, test_article_labels, test_penalty_labels = \
                                                             utils.prepare_data(os.path.join(dataset_path[i], "test.txt"), 
                                                                                 lang, 
                                                                                 max_length=param.MAX_LENGTH,
                                                                                 pretrained_vec=pretrained_w2v)
-        for mode, idx2cases in zip(param.MODE,[accu2cases, article2cases, penalty2cases]):
-            param.BATCH_SIZE = len(accu2cases.keys())
+        # 训练
+        for mode, idx2cases in zip(param.MODE,[article2cases, accu2cases, penalty2cases]):
             print(f"training mode: {mode}")
+            print(f"loading {lang.name}_{mode}_sim_graph")
+            with open(f"label_sim_graph_construction/32_{lang.name}_{mode}_sim_graph.pkl", "rb") as f:
+                sim_graph = pickle.load(f)
+
             # 定义模型
             model = GRULSSCL(label_size=len(idx2cases.keys()),
-                            pretrained_w2c=pretrained_w2v,
+                            pretrained_w2v=pretrained_w2v,
                             dropout=param.DROPOUT_RATE,
                             num_layers=param.GRU_LAYERS,
                             input_size=param.EM_SIZE,
@@ -64,11 +68,10 @@ def train():
             # 定义损失函数
             criterion = nn.CrossEntropyLoss()
             
-            optimizer = optim.AdamW([{"params": model.em.parameters(), 'lr': 0.00001},
-                                {"params": model.enc.parameters(), 'weight_decay': 0.05},
-                                {'params': model.chargePreds.parameters()},
-                                {'params': model.articlePreds.parameters()},
-                                {'params': model.penaltyPreds.parameters()}
+            optimizer = optim.AdamW([{"params": model.em.parameters(), 'lr': 1e-4},
+                                {"params": model.enc.parameters()},
+                                {'params': model.Preds.parameters()},
+                                {"params":model.contras_linear.parameters()}
                                 ], lr=param.LR, weight_decay=param.L2)
 
             scheduler = get_cosine_with_hard_restarts_schedule_with_warmup(optimizer,
@@ -83,8 +86,43 @@ def train():
             valid_mp_records = {"charge": [], "article": [], "penalty": []}
             valid_f1_records = {"charge": [], "article": [], "penalty": []}
             valid_mr_records = {"charge": [], "article": [], "penalty": []}
+            
             # 记录训练过程
             frecords = open(f"output/train_gru/model-{lang.name}-{mode}.txt", "w", encoding="utf-8")
+            for samples, labels in utils.data_loader_cycle(accu2cases, positive_size=param.POSITIVE_SIZE, shuffle=True):
+                start = time.time()
+                # 总训练误差
+                total_train_loss = 0
+                # 总测试误差
+                total_valid_loss = 0
+                # 设置模型状态
+                model.train()
+                # 优化参数的梯度置0
+                optimizer.zero_grad()
+
+                # 获取对比样本表示
+                contras_outputs = []
+                preds_outputs = []
+                for i in range(param.POSITIVE_SIZE):
+                    inputs = list(samples[:,i])
+                    # 输入模型
+                    seq_lens = [len(s) for s in inputs]
+                    for i in range(len(inputs)):
+                        inputs[i] = torch.tensor(inputs[i])
+                    padded_input_ids = pad_sequence(inputs, batch_first=True).to(device)
+                    preds,contras_vec = model(padded_input_ids, seq_lens)
+                    preds_outputs.append(preds)
+                    contras_outputs.append(contras_vec)
+
+                # 对比损失
+                contrastive_loss = utils.contras_loss(contras_outputs, lang=lang, sim_graph=sim_graph, labels=labels)
+
+                if mode == "charge":
+                    article_preds = model(padded_input_ids, seq_lens)
+                    # 法律条款预测误差
+                    train_loss = criterion(article_preds, torch.tensor(article_labels).to(device))
+
+
             for epoch in range(param.EPOCH): # 50个epoch
                 start = time.time()
                 # 总训练误差
@@ -97,8 +135,6 @@ def train():
                                                                                 train_penalty_labels,
                                                                                 shuffle=True,
                                                                                 batch_size=param.BATCH_SIZE):
-                # for _ in utils.data_loader_cycle(idx2cases, positive_size=2):
-                    
                     # 设置模型状态
                     model.train()
 

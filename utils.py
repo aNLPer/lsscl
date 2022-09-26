@@ -336,9 +336,10 @@ def data_loader_cycle(idx2cases, positive_size=2, shuffle=False):
         for _, values in idx2cases.items():
             random.shuffle(values)
     for i in range(0, max_length, positive_size):
+        samples = []
         for _, values in idx2cases.items():
-            samples = [[values[j%len(values)] for j in range(i,i+positive_size)]]
-        yield samples, list(idx2cases.keys())
+            samples.append([values[j%len(values)] for j in range(i,i+positive_size)])
+        yield np.array(samples), list(idx2cases.keys())
 
 def load_accu2desc(file_path, pretrained_vec=None):
     accu2desc = {}
@@ -355,23 +356,24 @@ def load_accu2desc(file_path, pretrained_vec=None):
                 accu2desc[accu] = desc
     return accu2desc
 
-def train_distloss_fun(outputs, radius = 10):
+def contras_loss(contras_inputs, lang, sim_graph, labels, radius = 10):
     """
-    :param outputs: [posi_size, batch_size/posi_size, hidden_dim]
-    :param label_rep:
+    :param contras_inputs: [positive_size, batch_size/posi_size, hidden_dim]
+    :param sim_graph: for weighting negative pairs
     :param label:
     :return:
     """
-    posi_size = outputs.shape[0]
-    batch_size = outputs.shape[1]
+    posi_size = len(contras_inputs)
+    batch_size = contras_inputs[0].shape[0]
     # 正样本距离
     posi_pairs_dist =0
     for i in range(posi_size-1):
         for j in range(i+1, posi_size):
-            posi_pairs_dist += torch.sum(F.pairwise_distance(outputs[i], outputs[j]))
+            posi_pairs_dist += torch.sum(F.pairwise_distance(contras_inputs[i], contras_inputs[j]))
 
+    
     # 负样本距离
-    # [posi_size, batch_size/2, hidden_dim] -> [batch_size/2, posi_size,  hidden_dim]
+    # [posi_size, batch_size, hidden_dim] -> [batch_size/2, posi_size,  hidden_dim]
     outputs = torch.transpose(outputs, dim0=0, dim1=1)
     neg_pairs_dist = 0
     for i in range(int(0.5*batch_size)-1):
