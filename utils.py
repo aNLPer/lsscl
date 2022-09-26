@@ -324,18 +324,21 @@ def data_loader(seq, charge_labels, article_labels, penalty_labels, shuffle, bat
               [article_labels[j] for j in ids], \
               [penalty_labels[j] for j in ids]
 
-def data_loader_cycle(idx2cases, positive_size=2):
+def data_loader_cycle(idx2cases, positive_size=2, shuffle=False):
     """
     遍历数据集选取数据
     positive_size: 正样本个数
     samples : [positive_size, N_classes, 4]
     """
     max_length = max([len(cases) for _, cases in idx2cases.items()])
-    samples = []
-    for i in range(max_length):
-        for j in range(1,positive_size):
-            samples.append([cases[(i+j)%len(cases)] for _, cases in idx2cases.items()])
-        yield samples
+    # 打乱数据集
+    if shuffle:
+        for _, values in idx2cases.items():
+            random.shuffle(values)
+    for i in range(0, max_length, positive_size):
+        for _, values in idx2cases.items():
+            samples = [[values[j%len(values)] for j in range(i,i+positive_size)]]
+        yield samples, list(idx2cases.keys())
 
 def load_accu2desc(file_path, pretrained_vec=None):
     accu2desc = {}
@@ -600,5 +603,4 @@ def preds2labels(preds):
     return list(preds)
 
 if __name__ == "__main__":
-    preds = np.array([[0.2,0.8],[0.1,0.9]])
-    print(preds2labels(preds))
+    pass

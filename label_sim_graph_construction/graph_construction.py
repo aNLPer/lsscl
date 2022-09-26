@@ -128,32 +128,30 @@ def contrust_graph(dic,threshold):
 
     return sim_graph
 
-def test_contrust_graph():
-    d = {"a":[1,2,3,4], "b":[1,2,3,4], "c":[-1,-2,-3,4], "d":[-1,-2,-3,4], "e":[1,2,3,4]}
-    print(list(d.keys()))
-    m, g = graph_construction.contrust_graph(d, 0.5)
-    print(m, g)
-
 if __name__=="__main__":
     select_size = 32
     threshold = -1
-    data_zip = data_pre(path="dataset/train_seg_for_graph.txt")
-    label_reps = []
-    print("calculating tf_idf reps...")
-    for d, l in data_zip:
-        key2tf_idf = tf_idf(d,l)
-        label_reps.append(key2tf_idf)
-    with open(f"{select_size}_large_label_reps.pkl", "wb") as f:
-         pickle.dump(label_reps, f)
+    # 数据准备
+    # data_zip = data_pre(path="dataset/train_seg_for_graph.txt")
+    # 计算tf-idf向量
+    # label_reps = []
+    # print("calculating tf_idf reps...")
+    # for d, l in data_zip:
+    #     key2tf_idf = tf_idf(d,l)
+    #     label_reps.append(key2tf_idf)
+    # with open(f"{select_size}_large_label_reps.pkl", "wb") as f:
+    #      pickle.dump(label_reps, f)
     
-    # with open("label_sim_graph_construction/32_small_label_reps.pkl", "rb") as f:
+    # 构造相似图
+    # with open("label_sim_graph_construction/32_large_label_reps.pkl", "rb") as f:
     #     reps = pickle.load(f)
-    # for name, rep in zip(["charge_sim_graph", "article_sim_graph", "penalty_sim_graph"], reps):
+    # for name, rep in zip(["32_large_charge_sim_graph", "32_large_article_sim_graph", "32_large_penalty_sim_graph"], reps):
     #     graph = contrust_graph(rep, threshold=threshold)
     #     with open(f"label_sim_graph_construction/{name}.pkl","wb") as f:
     #         pickle.dump(graph, f)
-    # with open("label_sim_graph_construction/charge_sim_graph.pkl", "rb") as f:
-    #     graph = pickle.load(f)
+    with open("label_sim_graph_construction/32_large_charge_sim_graph.pkl", "rb") as f:
+        graph = pickle.load(f)
+        print(graph)
     # print(graph)
     # data_paths = ["dataset/CAIL-SMALL/train_seg.txt","dataset/CAIL-LARGE/train_seg.txt"]
     # lang_paths = ["dataset/CAIL-SMALL/train_seg_lang.pkl", "dataset/CAIL-LARGE/train_seg_lang.pkl"]
