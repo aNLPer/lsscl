@@ -9,6 +9,7 @@ import pickle
 import math
 import time 
 import numpy as np
+import torch
 
 
 def data_pre(path):
@@ -102,7 +103,7 @@ def tf_idf(dic, lang):
         print(f"{key} : {tf_idf_rep[:10]}")
     return idx2tf_idf
 
-def contrust_graph(dic,threshold):
+def contrust_graph(dic,threshold,scale=True):
     # 相似矩阵
     keys = list(dic.keys())
     sim_matrix = np.zeros(shape=(len(keys), len(keys)))
@@ -114,6 +115,12 @@ def contrust_graph(dic,threshold):
                 sim_matrix[i][j] = cos_sim
             else:
                 sim_matrix[i][j] = 0.
+    # 归一化
+    if scale:
+        for k in range(sim_matrix.shape[0]):
+            sim_matrix[k][k] = float("-inf")
+        sim_matrix = torch.from_numpy(sim_matrix)
+        sim_matrix = torch.softmax(sim_matrix,dim=1).numpy()
     
     # 根据相似矩阵得到label_sim_graph
     sim_graph = {}
@@ -121,10 +128,10 @@ def contrust_graph(dic,threshold):
         sim_graph.setdefault(k,{})
     for i in range(len(keys)):
         for j in range(len(keys)):
-            if i == j:
-                continue
-            if sim_matrix[i][j]!=0:
-                sim_graph[keys[i]][keys[j]]=sim_matrix[i][j]
+            if sim_matrix[i][j]==0. and i!=j:
+                sim_graph[keys[i]][keys[j]]=0.0001
+            else:
+                sim_graph[keys[i]][keys[j]]=round(sim_matrix[i][j],6)
 
     return sim_graph
 
@@ -143,9 +150,9 @@ if __name__=="__main__":
     #      pickle.dump(label_reps, f)
     
     # 构造相似图
-    # with open("label_sim_graph_construction/32_large_label_reps.pkl", "rb") as f:
+    # with open("label_sim_graph_construction/32_small_label_reps.pkl", "rb") as f:
     #     reps = pickle.load(f)
-    # for name, rep in zip(["32_large_charge_sim_graph", "32_large_article_sim_graph", "32_large_penalty_sim_graph"], reps):
+    # for name, rep in zip(["32_small_charge_sim_graph", "32_small_article_sim_graph", "32_small_penalty_sim_graph"], reps):
     #     graph = contrust_graph(rep, threshold=threshold)
     #     with open(f"label_sim_graph_construction/{name}.pkl","wb") as f:
     #         pickle.dump(graph, f)
