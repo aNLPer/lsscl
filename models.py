@@ -1,3 +1,4 @@
+from cProfile import label
 import torch
 import pickle
 import torch.nn as nn 
@@ -116,6 +117,7 @@ class GRULSSCL(nn.Module):
                  mode="multi"):
         super(GRULSSCL, self).__init__()
 
+        self.label_size = label_size
         self.hidden_size = hidden_size
         self.input_size = input_size
         self.num_layers = num_layers
@@ -136,15 +138,15 @@ class GRULSSCL(nn.Module):
                           batch_first=True,
                           bidirectional=self.bidirectional)
 
-        self.linear = nn.Linear(2*self.hidden_size, self.hidden_size)
+        self.contras_linear = nn.Linear(2*self.hidden_size, self.hidden_size)
 
         self.atten = None
 
         self.Preds = nn.Sequential(
-            nn.Linear(2*self.hidden_size, self.hidden_size),
-            nn.BatchNorm1d(self.hidden_size),
+            nn.Linear(self.hidden_size, int(0.5*self.hidden_size)),
+            nn.BatchNorm1d(int(0.5*self.hidden_size)),
             nn.ReLU(),
-            nn.Linear(self.hidden_size, self.label_size)
+            nn.Linear(int(0.5*self.hidden_size), self.label_size)
         )
 
 
@@ -165,7 +167,7 @@ class GRULSSCL(nn.Module):
         outputs_mean = outputs_sum/unpacked_lens
 
         # [batch_size, hidden_size]
-        contras_vec = self.linear(outputs_mean)
+        contras_vec = self.contras_linear(outputs_mean)
 
         # [batch_size, charge_label_size]
         preds = self.Preds(contras_vec)
